@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💌 Love Notes Manager — Medleys A Cappella</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+/* =========================================================
+   BASE & VARIABLES
+   ========================================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red:       #c0392b;
+  --red-light: #e74c3c;
+  --pink:      #f8b4b4;
+  --pink-pale: #fff0f0;
+  --green:     #27ae60;
+  --green-lt:  #d5f5e3;
+  --yellow:    #f39c12;
+  --yellow-lt: #fef9e7;
+  --blue:      #2980b9;
+  --blue-lt:   #d6eaf8;
+  --gray:      #95a5a6;
+  --gray-lt:   #f4f6f7;
+  --dark:      #2c3e50;
+  --text:      #34495e;
+  --border:    #dfe6e9;
+  --radius:    8px;
+  --shadow:    0 2px 12px rgba(0,0,0,0.08);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #fdf0f0;
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+header {
+  background: linear-gradient(135deg, var(--red) 0%, #8e1a13 100%);
+  color: white;
+  padding: 24px 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(192,57,43,0.4);
+}
+header .heart { font-size: 2.4rem; }
+header h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
+header p  { font-size: 0.85rem; opacity: 0.85; margin-top: 3px; }
+
+/* =========================================================
+   TABS
+   ========================================================= */
+.tabs {
+  display: flex;
+  background: white;
+  border-bottom: 2px solid var(--border);
+  padding: 0 24px;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 14px 20px 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--gray);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: -2px;
+}
+.tab-btn:hover { color: var(--red); }
+.tab-btn.active { color: var(--red); border-bottom-color: var(--red); font-weight: 600; }
+
+/* =========================================================
+   TAB PANELS & LAYOUT
+   ========================================================= */
+.tab-panel { display: none; padding: 28px 32px; max-width: 1100px; margin: 0 auto; }
+.tab-panel.active { display: block; }
+
+.section {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--dark);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-desc {
+  font-size: 0.82rem;
+  color: var(--gray);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+.divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: var(--radius);
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary   { background: var(--red); color: white; }
+.btn-primary:hover:not(:disabled)  { background: var(--red-light); }
+.btn-success   { background: var(--green); color: white; }
+.btn-success:hover:not(:disabled)  { background: #2ecc71; }
+.btn-blue      { background: var(--blue); color: white; }
+.btn-blue:hover:not(:disabled)     { background: #3498db; }
+.btn-outline   { background: white; color: var(--text); border: 1px solid var(--border); }
+.btn-outline:hover:not(:disabled)  { background: var(--gray-lt); }
+.btn-danger    { background: #e74c3c; color: white; }
+.btn-danger:hover:not(:disabled)   { background: #c0392b; }
+.btn-sm        { padding: 5px 10px; font-size: 0.78rem; }
+.btn-xs        { padding: 3px 8px;  font-size: 0.75rem; }
+
+/* =========================================================
+   FORMS
+   ========================================================= */
+.form-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 200px; }
+.form-group label { font-size: 0.8rem; font-weight: 600; color: var(--dark); }
+.form-group input, .form-group select, .form-group textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  transition: border-color 0.15s;
+  width: 100%;
+  color: var(--text);
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none;
+  border-color: var(--red);
+}
+.form-group textarea { font-family: 'Courier New', monospace; resize: vertical; min-height: 100px; }
+.hint { font-size: 0.75rem; color: var(--gray); }
+
+/* =========================================================
+   TABLES
+   ========================================================= */
+.tbl-wrap { overflow-x: auto; border-radius: 6px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+th {
+  background: var(--gray-lt);
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--dark);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--pink-pale); }
+td input, td select { padding: 5px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.82rem; width: 100%; }
+td input:focus, td select:focus { outline: none; border-color: var(--red); }
+
+/* =========================================================
+   STATUS BADGES & CHIPS
+   ========================================================= */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge-green    { background: var(--green-lt); color: #1a7a42; }
+.badge-yellow   { background: var(--yellow-lt); color: #8e6300; }
+.badge-red      { background: #fdecea; color: #a93226; }
+.badge-blue     { background: var(--blue-lt); color: #1a5c8a; }
+.badge-gray     { background: var(--gray-lt); color: var(--gray); }
+.badge-pink     { background: var(--pink); color: var(--red); }
+
+/* =========================================================
+   AUTH STATUS
+   ========================================================= */
+.auth-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+}
+.auth-icon { font-size: 1.5rem; }
+.auth-info { flex: 1; }
+.auth-info strong { display: block; font-size: 0.88rem; }
+.auth-info small  { color: var(--gray); font-size: 0.78rem; }
+.auth-dot { width: 10px; height: 10px; border-radius: 50%; }
+.auth-dot.connected { background: var(--green); }
+.auth-dot.disconnected { background: var(--gray); }
+
+/* =========================================================
+   UPLOAD ZONE
+   ========================================================= */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--red);
+  background: var(--pink-pale);
+}
+.upload-zone input[type=file] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+.upload-icon { font-size: 2rem; margin-bottom: 8px; }
+.upload-zone p { font-size: 0.85rem; color: var(--gray); }
+.upload-zone.has-file { border-color: var(--green); background: var(--green-lt); }
+.upload-zone.has-file p { color: #1a7a42; font-weight: 500; }
+
+/* =========================================================
+   ORDER CARDS
+   ========================================================= */
+.order-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.order-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  background: white;
+  transition: background 0.15s;
+}
+.order-card-header:hover { background: var(--pink-pale); }
+.order-card-body {
+  display: none;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  background: var(--gray-lt);
+}
+.order-card.open .order-card-body { display: block; }
+.order-card.open .order-card-header { background: var(--pink-pale); }
+
+.performer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 10px 0;
+}
+.performer-part { }
+.performer-part h4 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--gray);
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.performer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  margin: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.performer-chip.selected { background: var(--red); color: white; border-color: var(--red); }
+
+/* =========================================================
+   OUTPUT BLOCKS
+   ========================================================= */
+.output-block {
+  background: #f8f8f8;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.output-block h4 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.output-text {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: var(--dark);
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+/* =========================================================
+   DAY TABS (Export)
+   ========================================================= */
+.day-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+.day-tab-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: white;
+  font-size: 0.83rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s;
+  color: var(--text);
+}
+.day-tab-btn:hover { border-color: var(--red); color: var(--red); }
+.day-tab-btn.active { background: var(--red); color: white; border-color: var(--red); }
+
+/* =========================================================
+   MISC
+   ========================================================= */
+.info-box {
+  background: var(--blue-lt);
+  border: 1px solid #aed6f1;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 0.83rem;
+  color: #1a5c8a;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+.warn-box {
+  background: var(--yellow-lt);
+  border: 1px solid #f9ca78;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 0.83rem;
+  color: #8e6300;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+.success-box {
+  background: var(--green-lt);
+  border: 1px solid #a9dfbf;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 0.83rem;
+  color: #1a7a42;
+  margin-bottom: 16px;
+}
+.flex-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.flex-end { justify-content: flex-end; }
+.mt-8  { margin-top: 8px; }
+.mt-14 { margin-top: 14px; }
+.mt-20 { margin-top: 20px; }
+.mb-10 { margin-bottom: 10px; }
+.bold  { font-weight: 600; }
+.small { font-size: 0.8rem; color: var(--gray); }
+#toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--dark);
+  color: white;
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 9999;
+  max-width: 320px;
+}
+#toast.show { opacity: 1; }
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- =====================================================
+     HEADER
+     ===================================================== -->
+<header>
+  <div class="heart">💌</div>
+  <div>
+    <h1>Love Notes Manager</h1>
+    <p>Medleys A Cappella — Fundraiser Automation Tool</p>
+  </div>
+</header>
+
+<!-- =====================================================
+     TAB NAV
+     ===================================================== -->
+<nav class="tabs" role="tablist">
+  <button class="tab-btn active" data-tab="setup">⚙️ Setup &amp; Config</button>
+  <button class="tab-btn" data-tab="matrix">📊 Availability Matrix</button>
+  <button class="tab-btn" data-tab="orders">📋 Order Dashboard</button>
+  <button class="tab-btn" data-tab="export">📤 Review &amp; Export</button>
+</nav>
+
+<!-- =====================================================
+     MAIN CONTENT
+     ===================================================== -->
+<main>
+
+<!-- ── TAB 1: SETUP ──────────────────────────────────── -->
+<div id="tab-setup" class="tab-panel active">
+
+  <!-- Google Integration -->
+  <div class="section">
+    <h2>🔑 Google Integration</h2>
+    <p class="section-desc">Connect to Google to create Calendar events and Gmail drafts for virtual love notes.
+      You need to set up a free Google Cloud Project first — see the <strong>Setup Guide</strong> in the repository README.
+    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>OAuth Client ID</label>
+        <input type="text" id="clientId" placeholder="xxxx.apps.googleusercontent.com" />
+        <span class="hint">From your Google Cloud Console → APIs &amp; Services → Credentials</span>
+      </div>
+    </div>
+
+    <div class="auth-row" id="gmailAuthRow">
+      <span class="auth-icon">📧</span>
+      <div class="auth-info">
+        <strong>Gmail / Sheets Account</strong>
+        <small id="gmailStatus">Not connected — used for Gmail drafts (virtual love notes)</small>
+      </div>
+      <div class="auth-dot disconnected" id="gmailDot"></div>
+      <button class="btn btn-outline btn-sm" id="btnGmailConnect" onclick="connectGoogle('gmail')">Connect</button>
+    </div>
+
+    <div class="auth-row" id="calAuthRow">
+      <span class="auth-icon">📅</span>
+      <div class="auth-info">
+        <strong>Google Calendar Account</strong>
+        <small id="calStatus">Not connected — used for creating performance calendar events</small>
+      </div>
+      <div class="auth-dot disconnected" id="calDot"></div>
+      <button class="btn btn-outline btn-sm" id="btnCalConnect" onclick="connectGoogle('calendar')">Connect</button>
+    </div>
+
+    <div class="flex-row mt-8">
+      <button class="btn btn-outline btn-sm" onclick="saveClientId()">💾 Save Client ID</button>
+    </div>
+  </div>
+
+  <!-- Member Roster -->
+  <div class="section">
+    <h2>🎤 Member Roster</h2>
+    <p class="section-desc">
+      List all performing members. The <strong>When2Meet Name</strong> must match exactly how they appear in the When2Meet CSV.
+      Beatboxers (VP) are members who can do vocal percussion. Update this roster each year.
+    </p>
+    <div class="tbl-wrap">
+      <table id="memberTable">
+        <thead>
+          <tr>
+            <th>When2Meet Name</th>
+            <th>Display Name</th>
+            <th>Voice Part</th>
+            <th>Slack @mention</th>
+            <th>Beatboxer?</th>
+            <th>Remove</th>
+          </tr>
+        </thead>
+        <tbody id="memberTbody"></tbody>
+      </table>
+    </div>
+    <div class="flex-row mt-14">
+      <button class="btn btn-outline btn-sm" onclick="addMemberRow()">+ Add Member</button>
+      <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 Save Roster</button>
+    </div>
+  </div>
+
+  <!-- Song → URL Mapping -->
+  <div class="section">
+    <h2>🎵 Song → YouTube URL Mapping</h2>
+    <p class="section-desc">
+      Map each song (exactly as it appears in the Google Form) to its unlisted YouTube recording URL.
+      You can edit rows directly or upload your VLN URL Bank spreadsheet.
+    </p>
+    <div class="flex-row mb-10">
+      <div class="upload-zone" style="flex:1; padding:12px 20px; text-align:left; display:flex; align-items:center; gap:10px;">
+        <input type="file" accept=".xlsx,.csv" id="songUrlFile" onchange="loadSongUrlFile(this)">
+        <span>📂</span>
+        <span id="songUrlFileLabel" style="font-size:0.83rem; color:var(--gray)">Upload VLN URL Bank spreadsheet (.xlsx or .csv)</span>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table id="songUrlTable">
+        <thead><tr><th>Song Name (as on Google Form)</th><th>YouTube URL</th><th>Remove</th></tr></thead>
+        <tbody id="songUrlTbody"></tbody>
+      </table>
+    </div>
+    <div class="flex-row mt-14">
+      <button class="btn btn-outline btn-sm" onclick="addSongUrlRow()">+ Add Song</button>
+      <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 Save Songs</button>
+    </div>
+  </div>
+
+  <!-- Column Mapping -->
+  <div class="section">
+    <h2>🗂️ Order Form Column Mapping</h2>
+    <p class="section-desc">
+      Tell the tool which column number (0-indexed) in your Google Form responses spreadsheet corresponds to each field.
+      The defaults below match the 2025–26 form. If the form changes next year, update these numbers.
+    </p>
+    <div class="info-box">
+      💡 <strong>How to find column numbers:</strong> Open your responses spreadsheet, look at the header row.
+      The first column is 0, the second is 1, and so on.
+    </div>
+    <div id="colMapForm"></div>
+    <div class="flex-row mt-14">
+      <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 Save Column Mapping</button>
+    </div>
+  </div>
+
+  <!-- Output Templates -->
+  <div class="section">
+    <h2>📝 Output Templates</h2>
+    <p class="section-desc">
+      Customize the format of generated outputs using <code>{{placeholders}}</code>.
+      Changes take effect immediately when you generate outputs in the Export tab.
+    </p>
+
+    <h3 style="font-size:0.88rem; margin-bottom:6px;">Slack Announcement Entry</h3>
+    <p class="hint mb-10">Placeholders: {{time}}, {{location}}, {{song}}, {{recipient}}, {{sender}}, {{contact}}, {{special_instruction}}, {{sop_list}}, {{alt_list}}, {{ten_list}}, {{bass_list}}</p>
+    <textarea id="tmplSlack" rows="14"></textarea>
+
+    <hr class="divider">
+    <h3 style="font-size:0.88rem; margin-bottom:6px;">Confirmation Message (SMS to customer)</h3>
+    <p class="hint mb-10">Placeholders: {{sender}}, {{sender_first}}, {{recipient}}, {{location}}, {{time}}, {{song}}, {{special_instruction}}</p>
+    <textarea id="tmplConfirm" rows="10"></textarea>
+
+    <hr class="divider">
+    <h3 style="font-size:0.88rem; margin-bottom:6px;">Virtual Love Note Email Body (HTML)</h3>
+    <p class="hint mb-10">Placeholders: {{recipient}}, {{sender}}, {{youtube_url}}. The link will be embedded as a hyperlink on the word "this".</p>
+    <textarea id="tmplEmail" rows="14"></textarea>
+
+    <div class="flex-row mt-14">
+      <button class="btn btn-outline btn-sm" onclick="resetTemplates()">↩ Reset to Defaults</button>
+      <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 Save Templates</button>
+    </div>
+  </div>
+
+  <!-- Matrix Config -->
+  <div class="section">
+    <h2>⏰ Performance Hours</h2>
+    <p class="section-desc">Set the earliest and latest performance time slots for the availability matrix.</p>
+    <div class="form-row">
+      <div class="form-group" style="max-width:180px;">
+        <label>Earliest slot start (24h)</label>
+        <input type="number" id="matrixStartHour" min="0" max="23" value="8" />
+      </div>
+      <div class="form-group" style="max-width:180px;">
+        <label>Latest slot end (24h)</label>
+        <input type="number" id="matrixEndHour" min="1" max="24" value="21" />
+      </div>
+    </div>
+    <div class="flex-row">
+      <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 Save</button>
+    </div>
+  </div>
+
+</div><!-- /tab-setup -->
+
+
+<!-- ── TAB 2: AVAILABILITY MATRIX ───────────────────── -->
+<div id="tab-matrix" class="tab-panel">
+
+  <div class="section">
+    <h2>📥 Step 1 — Upload When2Meet CSV</h2>
+    <p class="section-desc">
+      Export your When2Meet results as a CSV file (use the "Export to CSV" button on When2Meet)
+      and upload it here. The tool will parse each member's availability for each 15-minute slot.
+    </p>
+    <div class="upload-zone" id="w2mZone">
+      <input type="file" accept=".csv" id="w2mFile" onchange="loadW2MFile(this)">
+      <div class="upload-icon">📄</div>
+      <p id="w2mFileLabel">Click or drag to upload When2Meet CSV</p>
+    </div>
+    <div id="w2mPreview" class="mt-14" style="display:none">
+      <div class="success-box" id="w2mSummary"></div>
+      <div class="warn-box" id="w2mUnmapped" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>⚙️ Step 2 — Configure Matrix Options</h2>
+    <p class="section-desc">Set the fundraiser date range and confirm performance hours (set in Setup).</p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fundraiser Start Date</label>
+        <input type="date" id="matrixStartDate" />
+      </div>
+      <div class="form-group">
+        <label>Fundraiser End Date</label>
+        <input type="date" id="matrixEndDate" />
+      </div>
+    </div>
+    <div class="info-box">
+      Performance hours: <strong id="matrixHoursLabel">8:00 AM – 9:00 PM</strong> (change in Setup tab).
+      Columns will use 30-minute slots across this range.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📊 Step 3 — Generate &amp; Download</h2>
+    <p class="section-desc">
+      The tool applies the availability rules (both 15-min slots must be "Yes" for a 30-min slot to be available)
+      and color-codes each time slot header: <span class="badge badge-green">🟢 Green = can perform with beatboxer</span>
+      <span class="badge badge-yellow">🟡 Yellow = can perform, no beatboxer</span>
+      <span class="badge badge-red">🔴 Red = cannot perform</span>.
+    </p>
+    <div class="flex-row">
+      <button class="btn btn-primary" id="btnGenerateMatrix" onclick="generateMatrix()" disabled>
+        📊 Generate Availability Matrix
+      </button>
+    </div>
+    <div id="matrixStatus" class="mt-14"></div>
+  </div>
+
+</div><!-- /tab-matrix -->
+
+
+<!-- ── TAB 3: ORDER DASHBOARD ────────────────────────── -->
+<div id="tab-orders" class="tab-panel">
+
+  <div class="section">
+    <h2>📥 Upload Files</h2>
+    <p class="section-desc">Upload the Google Form responses spreadsheet and the completed availability matrix.</p>
+    <div class="form-row">
+      <div style="flex:1">
+        <p class="bold mb-10" style="font-size:0.85rem">Order Form Responses (.xlsx)</p>
+        <div class="upload-zone" id="ordersZone">
+          <input type="file" accept=".xlsx" id="ordersFile" onchange="loadOrdersFile(this)">
+          <div class="upload-icon">📋</div>
+          <p id="ordersFileLabel">Click or drag to upload responses spreadsheet</p>
+        </div>
+      </div>
+      <div style="flex:1">
+        <p class="bold mb-10" style="font-size:0.85rem">Availability Matrix (.xlsx)</p>
+        <div class="upload-zone" id="matrixZone">
+          <input type="file" accept=".xlsx" id="matrixFile" onchange="loadMatrixFile(this)">
+          <div class="upload-icon">📊</div>
+          <p id="matrixFileLabel">Click or drag to upload availability matrix</p>
+        </div>
+      </div>
+    </div>
+    <div class="flex-row mt-14">
+      <button class="btn btn-primary" id="btnParseOrders" onclick="parseOrders()" disabled>
+        🔍 Load Orders
+      </button>
+      <span id="ordersLoadStatus" class="small"></span>
+    </div>
+  </div>
+
+  <div class="section" id="ordersSection" style="display:none">
+    <h2>📋 Orders</h2>
+    <div class="flex-row mb-10">
+      <div class="day-tabs" id="orderDayFilter">
+        <button class="day-tab-btn active" data-filter="all" onclick="filterOrders('all',this)">All</button>
+        <button class="day-tab-btn" data-filter="Mon" onclick="filterOrders('Mon',this)">Mon 2/9</button>
+        <button class="day-tab-btn" data-filter="Tue" onclick="filterOrders('Tue',this)">Tue 2/10</button>
+        <button class="day-tab-btn" data-filter="Wed" onclick="filterOrders('Wed',this)">Wed 2/11</button>
+        <button class="day-tab-btn" data-filter="Thu" onclick="filterOrders('Thu',this)">Thu 2/12</button>
+        <button class="day-tab-btn" data-filter="Fri" onclick="filterOrders('Fri',this)">Fri 2/13</button>
+        <button class="day-tab-btn" data-filter="Sat" onclick="filterOrders('Sat',this)">Sat 2/14</button>
+        <button class="day-tab-btn" data-filter="Virtual" onclick="filterOrders('Virtual',this)">💻 Virtual</button>
+      </div>
+    </div>
+    <div id="ordersList"></div>
+  </div>
+
+</div><!-- /tab-orders -->
+
+
+<!-- ── TAB 4: REVIEW & EXPORT ────────────────────────── -->
+<div id="tab-export" class="tab-panel">
+
+  <div class="section">
+    <h2>📤 Review &amp; Export</h2>
+    <p class="section-desc">
+      Select a day to view all generated outputs. Copy Slack entries and confirmation messages,
+      create Google Calendar events, and create Gmail drafts for virtual love notes.
+      Load your orders in the Order Dashboard tab first.
+    </p>
+    <div class="day-tabs" id="exportDayTabs">
+      <button class="day-tab-btn active" data-day="Mon" onclick="showExportDay('Mon',this)">Mon 2/9</button>
+      <button class="day-tab-btn" data-day="Tue" onclick="showExportDay('Tue',this)">Tue 2/10</button>
+      <button class="day-tab-btn" data-day="Wed" onclick="showExportDay('Wed',this)">Wed 2/11</button>
+      <button class="day-tab-btn" data-day="Thu" onclick="showExportDay('Thu',this)">Thu 2/12</button>
+      <button class="day-tab-btn" data-day="Fri" onclick="showExportDay('Fri',this)">Fri 2/13</button>
+      <button class="day-tab-btn" data-day="Sat" onclick="showExportDay('Sat',this)">Sat 2/14</button>
+      <button class="day-tab-btn" data-day="Virtual" onclick="showExportDay('Virtual',this)">💻 Virtual</button>
+    </div>
+
+    <!-- Slack Announcement Block -->
+    <div id="slackBlock" style="display:none;">
+      <div class="output-block">
+        <h4>
+          Slack Announcement — <span id="slackDayLabel"></span>
+          <button class="btn btn-outline btn-xs" onclick="copySlackAnn()">📋 Copy All</button>
+        </h4>
+        <div class="output-text" id="slackOutput"></div>
+      </div>
+    </div>
+
+    <!-- Per-Order Export Cards -->
+    <div id="exportOrdersList"></div>
+  </div>
+
+</div><!-- /tab-export -->
+
+</main>
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<!-- Google Identity Services (loaded async) -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<!-- =====================================================
+     JAVASCRIPT APPLICATION
+     ===================================================== -->
+<script>
+'use strict';
+
+// ============================================================
+// DEFAULT DATA
+// ============================================================
+const DEFAULT_MEMBERS = [
+  {w2m:'Eric',         display:'Eric',     part:'TEN',  slack:'@Eric',           vp:false},
+  {w2m:'claire',       display:'Claire',   part:'SOP',  slack:'@Claire Chien',   vp:false},
+  {w2m:'Joshua',       display:'Joshua',   part:'BASS', slack:'@Joshua Nghiem',  vp:false},
+  {w2m:'brandon tang', display:'Brandon',  part:'TEN',  slack:'@BRANDON TANG',   vp:false},
+  {w2m:'Steve',        display:'Steve',    part:'BASS', slack:'@Steve Chung',    vp:true },
+  {w2m:'Khanh Tran',   display:'Khanh',    part:'ALT',  slack:'@Khanh Tran',     vp:false},
+  {w2m:'Joy',          display:'Joy',      part:'ALT',  slack:'@Joy Cheng',      vp:false},
+  {w2m:'Sandra Pan',   display:'Sandra',   part:'SOP',  slack:'@SANDRA PAN',     vp:true },
+  {w2m:'Hinata',       display:'Hinata',   part:'ALT',  slack:'@HINATA NAYUKI',  vp:false},
+  {w2m:'Amanda',       display:'Amanda',   part:'SOP',  slack:'@Amanda Lo',      vp:false},
+  {w2m:'Justin Yoo',   display:'Justin',   part:'BASS', slack:'@Justin Yoo',     vp:false},
+  {w2m:'Max Liu',      display:'Max',      part:'TEN',  slack:'@Max Liu',         vp:true },
+  {w2m:'fiona',        display:'Fiona',    part:'SOP',  slack:'@Fiona Zhang',    vp:false},
+  {w2m:'Julia',        display:'Julia',    part:'SOP',  slack:'@Julia Brandt',   vp:false},
+  {w2m:'Meghanne',     display:'Meghanne', part:'ALT',  slack:'@MEGHANNE CHAN',  vp:false},
+  {w2m:'Warren',       display:'Warren',   part:'BASS', slack:'@Warren Wu',      vp:false},
+  {w2m:'Aarya Patel',  display:'Aarya',    part:'ALT',  slack:'@Aarya Patel',    vp:false},
+  {w2m:'David',        display:'David',    part:'BASS', slack:'@DAVID XU',       vp:false},
+  {w2m:'Dylan',        display:'Dylan',    part:'TEN',  slack:'@DYLAN ZOU-SCHUPP',vp:false},
+];
+
+const DEFAULT_SONGS = [
+  {name:"From the Start - Laufey",                                        url:"https://youtu.be/2HB-WqWPfiU"},
+  {name:"Never Gonna Give You Up - Rick Astley",                           url:"https://youtu.be/pSIp21KCaZg"},
+  {name:"You Belong With Me - Taylor Swift",                               url:"https://youtu.be/bYuqQXdtDH8"},
+  {name:"So Easy (To Fall in Love) - Olivia Dean",                        url:"https://youtu.be/jZSU3juDChI"},
+  {name:"L-O-V-E - Nat King Cole",                                        url:"https://youtu.be/X_H9GPmU3Uw"},
+  {name:"Kiss the Girl - The Little Mermaid",                              url:"https://youtu.be/YjWnzcb9VXg"},
+  {name:"Everytime We Touch - Cascada",                                    url:"https://youtu.be/6JXw5lqFjSU"},
+  {name:"Stand by Me - Ben E. King",                                       url:"https://youtu.be/v3Y4ffdvQyo"},
+  {name:"I Want It That Way - Backstreet Boys",                            url:"https://youtu.be/vDQlT5x5joc"},
+  {name:"Can't Take My Eyes Off of You - Frankie Valli and the Four Seasons", url:"https://youtu.be/iR_dLMgqdsI"},
+  {name:"Just the Way You Are - Bruno Mars",                               url:"https://youtu.be/sle8pBxZOx4"},
+  {name:"How Deep is Your Love - Bee Gees",                               url:"https://youtu.be/9nJ98z5DMF4"},
+  {name:"Just the Way You Are - One Direction",                            url:""},
+  {name:"Doesn't matter/Surprise them ;)",                                 url:""},
+];
+
+const DEFAULT_COL_MAP = {
+  timestamp:         0,
+  emailAddress:      1,
+  senderName:        2,
+  recipientName:     3,
+  day:               4,
+  location:          5,
+  song:              6,
+  specialInstructions: 7,
+  heardFrom:         8,
+  timeMon:           9,
+  timeTue:           10,
+  timeWed:           11,
+  timeThu:           12,
+  timeFri:           13,
+  timeSat:           14,
+  virtualEmail:      15,
+  contact:           16,
+  paymentConfirm:    17,
+  paymentScreenshot: 18,
+  tip:               19,
+  dataStart:         1,   // which spreadsheet row (0-indexed) contains the header
+};
+
+const COL_MAP_LABELS = {
+  senderName:          "Sender Name (\"What's your name?\")",
+  recipientName:       "Recipient Name (\"Who's the lucky someone?\")",
+  day:                 "Day column (\"What day?\")",
+  location:            "Location column",
+  song:                "Song column",
+  specialInstructions: "Special Instructions column",
+  contact:             "Contact / phone column",
+  virtualEmail:        "Virtual love note recipient email column",
+  timeMon:             "Monday time slot column",
+  timeTue:             "Tuesday time slot column",
+  timeWed:             "Wednesday time slot column",
+  timeThu:             "Thursday time slot column",
+  timeFri:             "Friday time slot column",
+  timeSat:             "Saturday time slot column",
+  dataStart:           "Header row index (usually 1 if row 0 is instructions)",
+};
+
+const DEFAULT_TMPL_SLACK = `~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Time: {{time}}
+Location: {{location}}
+Song: {{song}}
+Recipient Name: {{recipient}}
+Sender Name: {{sender}}
+Contact: {{contact}}{{special_instruction_line}}
+Attendance:
+\tSOPS:
+{{sop_list}}
+\tALTOS:
+{{alt_list}}
+\tTENORS:
+{{ten_list}}
+\tBASS:
+{{bass_list}}`;
+
+const DEFAULT_TMPL_CONFIRM = `Hi {{sender_first}}! This is Medleys A Cappella, confirming your love note for today!
+Just wanted to double check the following information:
+Location: {{location}}
+Time: {{time}}
+To: {{recipient}}
+Song: {{song}}{{special_instruction_block}}
+See you soon!`;
+
+const DEFAULT_TMPL_EMAIL = `Greetings {{recipient}},
+
+Happy Valentine's Day from Medleys A Cappella!
+
+Every year, we fundraise for the LA Downtown Women's Center by selling singing valentines, and this year {{sender}} has sent one to YOU!
+
+Below you will find a link to your very own Love Note. We hope <a href="{{youtube_url}}">this</a> brightens your day!
+
+If you wish to learn more about the Downtown Women's Center, feel free to visit this link to learn more about their mission https://downtownwomenscenter.org/.
+
+Best,
+Medleys A Cappella`;
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  config: null,          // loaded from localStorage
+  gmailToken: null,
+  calendarToken: null,
+  w2mData: null,         // parsed when2meet: {members: [{name, slots: {colHeader: bool}}]}
+  matrixData: null,      // parsed availability matrix: {Mon: {memberDisplay: {slotKey: 0|1}}, ...}
+  orders: [],            // parsed orders
+  currentExportDay: 'Mon',
+};
+
+// ============================================================
+// CONFIG PERSISTENCE
+// ============================================================
+function defaultConfig() {
+  return {
+    clientId: '',
+    members: JSON.parse(JSON.stringify(DEFAULT_MEMBERS)),
+    songs: JSON.parse(JSON.stringify(DEFAULT_SONGS)),
+    colMap: JSON.parse(JSON.stringify(DEFAULT_COL_MAP)),
+    tmplSlack: DEFAULT_TMPL_SLACK,
+    tmplConfirm: DEFAULT_TMPL_CONFIRM,
+    tmplEmail: DEFAULT_TMPL_EMAIL,
+    matrixStartHour: 8,
+    matrixEndHour: 21,
+  };
+}
+
+function loadConfig() {
+  try {
+    const saved = localStorage.getItem('lnm_config');
+    state.config = saved ? JSON.parse(saved) : defaultConfig();
+    // Merge any missing keys from default
+    const def = defaultConfig();
+    for (const k of Object.keys(def)) {
+      if (state.config[k] === undefined) state.config[k] = def[k];
+    }
+  } catch(e) {
+    state.config = defaultConfig();
+  }
+}
+
+function saveConfig() {
+  // Read from UI
+  state.config.clientId = document.getElementById('clientId').value.trim();
+  state.config.matrixStartHour = parseInt(document.getElementById('matrixStartHour').value) || 8;
+  state.config.matrixEndHour   = parseInt(document.getElementById('matrixEndHour').value)   || 21;
+  state.config.tmplSlack   = document.getElementById('tmplSlack').value;
+  state.config.tmplConfirm = document.getElementById('tmplConfirm').value;
+  state.config.tmplEmail   = document.getElementById('tmplEmail').value;
+
+  // Members
+  state.config.members = [];
+  document.querySelectorAll('#memberTbody tr').forEach(tr => {
+    const inputs = tr.querySelectorAll('input,select');
+    if (inputs.length >= 5) {
+      state.config.members.push({
+        w2m:     inputs[0].value.trim(),
+        display: inputs[1].value.trim(),
+        part:    inputs[2].value,
+        slack:   inputs[3].value.trim(),
+        vp:      inputs[4].checked,
+      });
+    }
+  });
+
+  // Songs
+  state.config.songs = [];
+  document.querySelectorAll('#songUrlTbody tr').forEach(tr => {
+    const inputs = tr.querySelectorAll('input');
+    if (inputs.length >= 2 && inputs[0].value.trim()) {
+      state.config.songs.push({name: inputs[0].value.trim(), url: inputs[1].value.trim()});
+    }
+  });
+
+  // Column mapping
+  for (const key of Object.keys(DEFAULT_COL_MAP)) {
+    const el = document.getElementById('colMap_' + key);
+    if (el) state.config.colMap[key] = parseInt(el.value) || 0;
+  }
+
+  localStorage.setItem('lnm_config', JSON.stringify(state.config));
+  updateMatrixHoursLabel();
+  toast('✅ Configuration saved!');
+}
+
+function saveClientId() {
+  state.config.clientId = document.getElementById('clientId').value.trim();
+  localStorage.setItem('lnm_config', JSON.stringify(state.config));
+  toast('✅ Client ID saved!');
+}
+
+// ============================================================
+// UI POPULATION
+// ============================================================
+function populateSetupUI() {
+  const c = state.config;
+  document.getElementById('clientId').value = c.clientId || '';
+  document.getElementById('matrixStartHour').value = c.matrixStartHour;
+  document.getElementById('matrixEndHour').value   = c.matrixEndHour;
+  document.getElementById('tmplSlack').value   = c.tmplSlack;
+  document.getElementById('tmplConfirm').value = c.tmplConfirm;
+  document.getElementById('tmplEmail').value   = c.tmplEmail;
+  populateMemberTable();
+  populateSongUrlTable();
+  populateColMapForm();
+  updateMatrixHoursLabel();
+}
+
+function populateMemberTable() {
+  const tbody = document.getElementById('memberTbody');
+  tbody.innerHTML = '';
+  for (const m of state.config.members) addMemberRow(m);
+}
+
+function addMemberRow(m={}) {
+  const tbody = document.getElementById('memberTbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" value="${esc(m.w2m||'')}" placeholder="as in When2Meet CSV" /></td>
+    <td><input type="text" value="${esc(m.display||'')}" placeholder="Display name" /></td>
+    <td><select>
+      <option value="SOP" ${m.part==='SOP'?'selected':''}>SOP</option>
+      <option value="ALT" ${m.part==='ALT'?'selected':''}>ALT</option>
+      <option value="TEN" ${m.part==='TEN'?'selected':''}>TEN</option>
+      <option value="BASS" ${m.part==='BASS'?'selected':''}>BASS</option>
+    </select></td>
+    <td><input type="text" value="${esc(m.slack||'')}" placeholder="@SlackHandle" /></td>
+    <td style="text-align:center"><input type="checkbox" ${m.vp?'checked':''} /></td>
+    <td><button class="btn btn-danger btn-xs" onclick="this.closest('tr').remove()">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function populateSongUrlTable() {
+  const tbody = document.getElementById('songUrlTbody');
+  tbody.innerHTML = '';
+  for (const s of state.config.songs) addSongUrlRow(s);
+}
+
+function addSongUrlRow(s={}) {
+  const tbody = document.getElementById('songUrlTbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" value="${esc(s.name||'')}" placeholder="Exact song name from Google Form" style="width:100%;min-width:260px" /></td>
+    <td><input type="text" value="${esc(s.url||'')}" placeholder="https://youtu.be/..." style="width:100%;min-width:200px" /></td>
+    <td><button class="btn btn-danger btn-xs" onclick="this.closest('tr').remove()">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function populateColMapForm() {
+  const container = document.getElementById('colMapForm');
+  container.innerHTML = '';
+  const keys = Object.keys(COL_MAP_LABELS);
+  let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;">';
+  for (const key of keys) {
+    const val = state.config.colMap[key] !== undefined ? state.config.colMap[key] : DEFAULT_COL_MAP[key];
+    html += `<div class="form-group">
+      <label>${COL_MAP_LABELS[key]}</label>
+      <input type="number" id="colMap_${key}" value="${val}" min="0" />
+    </div>`;
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function updateMatrixHoursLabel() {
+  const s = state.config.matrixStartHour;
+  const e = state.config.matrixEndHour;
+  const fmt = h => h === 12 ? '12:00 PM' : h < 12 ? `${h}:00 AM` : `${h-12}:00 PM`;
+  const el = document.getElementById('matrixHoursLabel');
+  if (el) el.textContent = `${fmt(s)} – ${fmt(e)}`;
+}
+
+function resetTemplates() {
+  document.getElementById('tmplSlack').value   = DEFAULT_TMPL_SLACK;
+  document.getElementById('tmplConfirm').value = DEFAULT_TMPL_CONFIRM;
+  document.getElementById('tmplEmail').value   = DEFAULT_TMPL_EMAIL;
+  toast('Templates reset to defaults. Click Save to keep.');
+}
+
+function loadSongUrlFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      const songs = [];
+      for (let i = 1; i < rows.length; i++) {
+        if (rows[i][0]) songs.push({name: String(rows[i][0]).trim(), url: String(rows[i][1]||'').trim()});
+      }
+      state.config.songs = songs;
+      populateSongUrlTable();
+      document.getElementById('songUrlFileLabel').textContent = `✅ Loaded: ${file.name} (${songs.length} songs)`;
+      toast(`✅ Loaded ${songs.length} songs from file`);
+    } catch(err) {
+      toast('❌ Error reading file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ============================================================
+// TAB NAVIGATION
+// ============================================================
+function initTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+    });
+  });
+}
+
+// ============================================================
+// GOOGLE AUTH
+// ============================================================
+const GMAIL_SCOPES    = 'https://www.googleapis.com/auth/gmail.compose';
+const CALENDAR_SCOPES = 'https://www.googleapis.com/auth/calendar.events';
+
+let gmailTokenClient = null;
+let calTokenClient   = null;
+
+function initGoogleAuth() {
+  // GIS loads async; we'll init on first connect click
+}
+
+function connectGoogle(type) {
+  const clientId = document.getElementById('clientId').value.trim() || state.config.clientId;
+  if (!clientId) {
+    toast('⚠️ Please enter your OAuth Client ID first and save it.');
+    return;
+  }
+  if (typeof google === 'undefined') {
+    toast('⚠️ Google Identity Services not loaded yet. Check your internet connection and refresh.');
+    return;
+  }
+  const scope    = type === 'gmail' ? GMAIL_SCOPES : CALENDAR_SCOPES;
+  const callback = type === 'gmail' ? onGmailToken : onCalToken;
+  const client   = google.accounts.oauth2.initTokenClient({client_id: clientId, scope, callback});
+  if (type === 'gmail') gmailTokenClient = client;
+  else calTokenClient = client;
+  client.requestAccessToken();
+}
+
+function onGmailToken(resp) {
+  if (resp.error) { toast('❌ Gmail auth failed: ' + resp.error); return; }
+  state.gmailToken = resp.access_token;
+  document.getElementById('gmailDot').className    = 'auth-dot connected';
+  document.getElementById('gmailStatus').textContent = '✅ Connected';
+  document.getElementById('btnGmailConnect').textContent = 'Reconnect';
+  toast('✅ Gmail account connected!');
+}
+
+function onCalToken(resp) {
+  if (resp.error) { toast('❌ Calendar auth failed: ' + resp.error); return; }
+  state.calendarToken = resp.access_token;
+  document.getElementById('calDot').className   = 'auth-dot connected';
+  document.getElementById('calStatus').textContent = '✅ Connected';
+  document.getElementById('btnCalConnect').textContent = 'Reconnect';
+  toast('✅ Google Calendar account connected!');
+}
+
+// ============================================================
+// WHEN2MEET PARSING
+// ============================================================
+function loadW2MFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const zone  = document.getElementById('w2mZone');
+  const label = document.getElementById('w2mFileLabel');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb   = XLSX.read(e.target.result, {type:'array'});
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      parseW2M(rows);
+      zone.classList.add('has-file');
+      label.textContent = `✅ ${file.name}`;
+      document.getElementById('btnGenerateMatrix').disabled = false;
+    } catch(err) {
+      toast('❌ Error reading file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseW2M(rows) {
+  const headers = rows[0]; // ['', 'Mon Feb 9 08:00:00 2026', ...]
+  // Build slot info: [{colIdx, date, hour, minute, dayKey}]
+  const slots = [];
+  for (let i = 1; i < headers.length; i++) {
+    const parsed = parseW2MHeader(headers[i]);
+    if (parsed) slots.push({colIdx: i, ...parsed});
+  }
+
+  // Build member data
+  const members = [];
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
+    if (!row[0]) continue;
+    const member = {name: row[0], slots: {}};
+    for (const slot of slots) {
+      member.slots[slot.colIdx] = (String(row[slot.colIdx]).trim().toLowerCase() === 'yes');
+    }
+    members.push(member);
+  }
+
+  state.w2mData = {headers, slots, members};
+  showW2MPreview();
+}
+
+function parseW2MHeader(str) {
+  // 'Mon Feb  9 08:00:00 2026' or 'Tue Feb 10 08:15:00 2026'
+  const m = str.match(/(\w+)\s+\w+\s+(\d+)\s+(\d+):(\d+):(\d+)\s+(\d+)/);
+  if (!m) return null;
+  const dayNames = {Mon:0,Tue:1,Wed:2,Thu:3,Fri:4,Sat:5,Sun:6};
+  const dayKey = m[1];
+  const day    = parseInt(m[2]);
+  const hour   = parseInt(m[3]);
+  const minute = parseInt(m[4]);
+  const year   = parseInt(m[6]);
+  return {dayKey, day, hour, minute, year};
+}
+
+function showW2MPreview() {
+  const preview = document.getElementById('w2mPreview');
+  const summary = document.getElementById('w2mSummary');
+  const unmapped = document.getElementById('w2mUnmapped');
+  preview.style.display = 'block';
+
+  const memberNames = state.w2mData.members.map(m => m.name);
+  const configNames = state.config.members.map(m => m.w2m.toLowerCase().trim());
+  const unmatched   = memberNames.filter(n => !configNames.includes(n.toLowerCase().trim()));
+
+  summary.textContent = `✅ Parsed ${memberNames.length} members: ${memberNames.join(', ')}. ${state.w2mData.slots.length} time slots detected.`;
+
+  if (unmatched.length > 0) {
+    unmapped.style.display = 'block';
+    unmapped.innerHTML = `⚠️ These When2Meet names have no match in your Member Roster and will be skipped:<br><strong>${unmatched.join(', ')}</strong><br>
+    Go to Setup → Member Roster and update the "When2Meet Name" column to match exactly.`;
+  } else {
+    unmapped.style.display = 'none';
+  }
+}
+
+// ============================================================
+// AVAILABILITY MATRIX GENERATION
+// ============================================================
+async function generateMatrix() {
+  const btn = document.getElementById('btnGenerateMatrix');
+  const statusEl = document.getElementById('matrixStatus');
+  if (!state.w2mData) { toast('⚠️ Please upload When2Meet CSV first.'); return; }
+
+  const startHour = state.config.matrixStartHour;
+  const endHour   = state.config.matrixEndHour;
+
+  // Build 30-min time slots
+  const timeSlots = []; // [{label, startH, startM}]
+  for (let h = startHour; h < endHour; h++) {
+    timeSlots.push({label: fmtSlotLabel(h, 0),  startH: h, startM: 0 });
+    timeSlots.push({label: fmtSlotLabel(h, 30), startH: h, startM: 30});
+  }
+
+  // Determine fundraiser days from UI or from w2m data
+  const startDateStr = document.getElementById('matrixStartDate').value;
+  const endDateStr   = document.getElementById('matrixEndDate').value;
+  const dayOrder = ['Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  // Get unique days from When2Meet slots (excluding Sun)
+  const dayKeysInData = [...new Set(state.w2mData.slots.map(s => s.dayKey))].filter(d => d !== 'Sun');
+  const dayKeys = dayOrder.filter(d => dayKeysInData.includes(d));
+
+  const dayLabels = {Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday', Sat:'Saturday'};
+
+  try {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Generating...';
+    statusEl.innerHTML = '';
+
+    await new Promise(r => setTimeout(r, 50)); // let UI update
+
+    const ExcelJS = window.ExcelJS;
+    if (!ExcelJS) throw new Error('ExcelJS library not loaded. Check your internet connection.');
+
+    const workbook = new ExcelJS.Workbook();
+
+    // Build one sheet per day
+    for (const dayKey of dayKeys) {
+      const sheetName = dayLabels[dayKey];
+      const ws = workbook.addWorksheet(sheetName);
+
+      // Get the members in order: SOP, ALT, TEN, BASS
+      const partOrder = ['SOP','ALT','TEN','BASS'];
+      const membersByPart = {};
+      for (const p of partOrder) membersByPart[p] = [];
+      for (const m of state.config.members) {
+        if (membersByPart[m.part]) membersByPart[m.part].push(m);
+      }
+
+      // Compute availability per member per 30-min slot
+      // For each 30-min slot: both corresponding 15-min slots must be 'Yes'
+      const availability = {}; // memberW2MName -> slotIdx -> 0|1
+      for (const member of state.config.members) {
+        availability[member.w2m] = {};
+        const w2mMember = state.w2mData.members.find(
+          m => m.name.toLowerCase().trim() === member.w2m.toLowerCase().trim()
+        );
+        for (let si = 0; si < timeSlots.length; si++) {
+          const slot = timeSlots[si];
+          if (!w2mMember) { availability[member.w2m][si] = 0; continue; }
+          // Find the two 15-min slots
+          const s1 = state.w2mData.slots.find(s => s.dayKey===dayKey && s.hour===slot.startH && s.minute===slot.startM);
+          const s2 = state.w2mData.slots.find(s => s.dayKey===dayKey && s.hour===slot.startH && s.minute===slot.startM+15);
+          const a1 = s1 ? w2mMember.slots[s1.colIdx] : false;
+          const a2 = s2 ? w2mMember.slots[s2.colIdx] : false;
+          availability[member.w2m][si] = (a1 && a2) ? 1 : 0;
+        }
+      }
+
+      // === Build spreadsheet rows ===
+      // Row 1: header
+      const headerRow = ['', ...timeSlots.map(s => s.label)];
+      ws.addRow(headerRow);
+
+      // Style header row
+      const hRow = ws.getRow(1);
+      hRow.getCell(1).font = {bold: true};
+      for (let ci = 2; ci <= headerRow.length; ci++) {
+        hRow.getCell(ci).font = {bold: true};
+        hRow.getCell(ci).alignment = {horizontal:'center'};
+      }
+
+      // Track row positions for formula references
+      const sumRows = {};      // partKey -> Excel row number
+      const beatboxerRows = []; // Excel row numbers of beatboxers
+
+      let excelRow = 2;
+
+      for (const part of partOrder) {
+        const partMembers = membersByPart[part];
+        const partStartRow = excelRow;
+        const partMemberRows = [];
+
+        for (const member of partMembers) {
+          const rowData = [member.display];
+          for (let si = 0; si < timeSlots.length; si++) {
+            rowData.push(availability[member.w2m][si]);
+          }
+          ws.addRow(rowData);
+          ws.getRow(excelRow).getCell(1).font = {bold: false};
+          if (member.vp) beatboxerRows.push(excelRow);
+          partMemberRows.push(excelRow);
+          excelRow++;
+        }
+
+        // Part sum row
+        const sumRowIdx = excelRow;
+        sumRows[part] = sumRowIdx;
+        const sumRowData = [part + ' SUM'];
+        for (let ci = 2; ci <= timeSlots.length + 1; ci++) {
+          const col = colLetter(ci);
+          const formula = `SUM(${col}${partStartRow}:${col}${excelRow-1})`;
+          sumRowData.push({formula, result: 0});
+        }
+        ws.addRow(sumRowData);
+        const sumRow = ws.getRow(excelRow);
+        sumRow.getCell(1).font = {bold: true};
+        sumRow.getCell(1).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFEAECEE'}};
+        excelRow++;
+      }
+
+      // Empty row
+      ws.addRow([]);
+      excelRow++;
+
+      // VP SUM row
+      const vpRowIdx = excelRow;
+      const vpSumData = ['VP SUM'];
+      for (let ci = 2; ci <= timeSlots.length + 1; ci++) {
+        const col = colLetter(ci);
+        const refs = beatboxerRows.map(r => `${col}${r}`).join(',');
+        vpSumData.push(refs ? {formula: `SUM(${refs})`, result: 0} : 0);
+      }
+      ws.addRow(vpSumData);
+      ws.getRow(excelRow).getCell(1).font = {bold: true};
+      ws.getRow(excelRow).getCell(1).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFEAECEE'}};
+      excelRow++;
+
+      // Empty row
+      ws.addRow([]);
+      excelRow++;
+
+      // TOTAL SUM row
+      const totalSumData = ['TOTAL SUM'];
+      for (let ci = 2; ci <= timeSlots.length + 1; ci++) {
+        const col = colLetter(ci);
+        const refs = partOrder.map(p => `${col}${sumRows[p]}`).join(',');
+        totalSumData.push({formula: `SUM(${refs})`, result: 0});
+      }
+      ws.addRow(totalSumData);
+      ws.getRow(excelRow).getCell(1).font = {bold: true, color: {argb: 'FF2C3E50'}};
+      ws.getRow(excelRow).getCell(1).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFEAECEE'}};
+
+      // === Color code time slot headers ===
+      // We need to compute actual sums to know colors
+      for (let si = 0; si < timeSlots.length; si++) {
+        const ci = si + 2;
+
+        // Compute sums directly
+        const partSums = {};
+        for (const p of partOrder) {
+          partSums[p] = membersByPart[p].reduce((acc, m) => acc + (availability[m.w2m][si] || 0), 0);
+        }
+        const totalSum = Object.values(partSums).reduce((a,b) => a+b, 0);
+        const vpSum    = state.config.members.filter(m => m.vp).reduce((acc, m) => acc + (availability[m.w2m][si] || 0), 0);
+        const allPartsOk = partOrder.every(p => partSums[p] >= 1);
+
+        let color = 'FFFFFFFF'; // white (no color)
+        if (allPartsOk && totalSum >= 6 && vpSum >= 1) color = 'FF90EE90'; // green
+        else if (allPartsOk && totalSum >= 5)          color = 'FFFFFF99'; // yellow
+        else                                            color = 'FFFFB3B3'; // red/pink
+
+        const cell = ws.getRow(1).getCell(ci);
+        cell.fill  = {type:'pattern', pattern:'solid', fgColor:{argb: color}};
+      }
+
+      // Column widths
+      ws.getColumn(1).width = 14;
+      for (let ci = 2; ci <= timeSlots.length + 1; ci++) ws.getColumn(ci).width = 9;
+    }
+
+    // Download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob   = new Blob([buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url    = URL.createObjectURL(blob);
+    const a      = document.createElement('a');
+    a.href       = url;
+    a.download   = 'Love_Notes_Availability_Matrix.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
+
+    statusEl.innerHTML = '<div class="success-box">✅ Availability Matrix downloaded! Open it in Excel or Google Sheets to review, adjust highlighted slots, and share with your group.</div>';
+    toast('✅ Matrix generated and downloaded!');
+  } catch(err) {
+    statusEl.innerHTML = `<div class="warn-box">❌ Error: ${err.message}</div>`;
+    toast('❌ Generation failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '📊 Generate Availability Matrix';
+  }
+}
+
+function fmtSlotLabel(h, m) {
+  const h12 = h > 12 ? h - 12 : h;
+  const ms  = m === 0 ? '' : ':30';
+  const endM = m + 30;
+  const endH24 = endM >= 60 ? h + 1 : h;
+  const endH12 = endH24 > 12 ? endH24 - 12 : endH24;
+  const endMs  = endM % 60 === 0 ? '' : ':30';
+  return `${h12}${ms}-${endH12}${endMs}`;
+}
+
+function colLetter(n) {
+  // 1=A, 2=B, ..., 26=Z, 27=AA, etc.
+  let s = '';
+  while (n > 0) {
+    const rem = (n - 1) % 26;
+    s = String.fromCharCode(65 + rem) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s;
+}
+
+// ============================================================
+// ORDER PARSING
+// ============================================================
+let ordersFileData = null;
+let matrixFileData = null;
+
+function loadOrdersFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    ordersFileData = e.target.result;
+    document.getElementById('ordersFileLabel').textContent = `✅ ${file.name}`;
+    document.getElementById('ordersZone').classList.add('has-file');
+    checkParseReady();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function loadMatrixFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    matrixFileData = e.target.result;
+    document.getElementById('matrixFileLabel').textContent = `✅ ${file.name}`;
+    document.getElementById('matrixZone').classList.add('has-file');
+    checkParseReady();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function checkParseReady() {
+  document.getElementById('btnParseOrders').disabled = !(ordersFileData && matrixFileData);
+}
+
+function parseOrders() {
+  const status = document.getElementById('ordersLoadStatus');
+  try {
+    // Parse availability matrix
+    state.matrixData = parseMatrix(matrixFileData);
+
+    // Parse order form responses
+    const wb   = XLSX.read(ordersFileData, {type:'array'});
+    const ws   = wb.Sheets['Form Responses 1'] || wb.Sheets[wb.SheetNames[wb.SheetNames.length > 1 ? 1 : 0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+
+    const cm    = state.config.colMap;
+    const dataStartRow = cm.dataStart || 1; // skip instruction rows
+    state.orders = [];
+
+    for (let i = dataStartRow + 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || !row[cm.senderName]) continue;
+
+      const day = String(row[cm.day] || '');
+      const isVirtual = day.toLowerCase().includes('virtual') ||
+                        String(row[cm.location]||'').toLowerCase().includes('virtual');
+
+      // Find time slot and day key
+      let timeSlot = '', dayKey = '';
+      const dayTimeCols = {Mon: cm.timeMon, Tue: cm.timeTue, Wed: cm.timeWed,
+                           Thu: cm.timeThu, Fri: cm.timeFri, Sat: cm.timeSat};
+      for (const [dk, col] of Object.entries(dayTimeCols)) {
+        if (row[col] && String(row[col]).trim()) {
+          timeSlot = String(row[col]).trim();
+          dayKey   = dk;
+          break;
+        }
+      }
+
+      // Auto-assign performers
+      let performers = {SOP:[], ALT:[], TEN:[], BASS:[]};
+      if (!isVirtual && dayKey && timeSlot && state.matrixData[dayKey]) {
+        performers = getPerformers(dayKey, timeSlot);
+      }
+
+      const order = {
+        id:           i,
+        isVirtual,
+        dayKey,
+        timeSlot,
+        sender:       String(row[cm.senderName]   || '').trim(),
+        recipient:    String(row[cm.recipientName] || '').trim(),
+        location:     String(row[cm.location]      || '').trim(),
+        song:         String(row[cm.song]          || '').trim(),
+        special:      String(row[cm.specialInstructions] || '').trim(),
+        contact:      String(row[cm.contact]       || '').trim(),
+        virtualEmail: String(row[cm.virtualEmail]  || '').trim(),
+        performers,
+        overridden:   false,
+      };
+      state.orders.push(order);
+    }
+
+    status.textContent = `✅ Loaded ${state.orders.length} orders.`;
+    renderOrders(state.orders);
+    document.getElementById('ordersSection').style.display = 'block';
+    toast(`✅ ${state.orders.length} orders loaded!`);
+  } catch(err) {
+    status.textContent = '❌ Error: ' + err.message;
+    toast('❌ ' + err.message);
+    console.error(err);
+  }
+}
+
+function parseMatrix(buffer) {
+  const wb   = XLSX.read(buffer, {type:'array'});
+  const result = {}; // dayKey -> memberDisplay -> slotIndex -> 0|1
+  const startH = state.config.matrixStartHour;
+  const endH   = state.config.matrixEndHour;
+  const dayMap = {Monday:'Mon', Tuesday:'Tue', Wednesday:'Wed', Thursday:'Thu', Friday:'Fri', Saturday:'Sat'};
+
+  for (const sheetName of wb.SheetNames) {
+    const dayKey = dayMap[sheetName] || dayMap[sheetName.split(' ')[0]];
+    if (!dayKey) continue;
+
+    const ws   = wb.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+    if (rows.length < 2) continue;
+
+    const headers = rows[0]; // [null/blank, '8-8:30', ...]
+    result[dayKey] = {};
+
+    // Number of 30-min slots expected
+    const numSlots = (endH - startH) * 2;
+
+    // Build slot time keys (hour + min as 24h) from column position
+    const slotTimes = [];
+    for (let h = startH; h < endH; h++) {
+      slotTimes.push({h, m: 0});
+      slotTimes.push({h, m: 30});
+    }
+
+    const sumKeywords = ['SUM', 'sum'];
+    for (const row of rows.slice(1)) {
+      const label = String(row[0] || '').trim();
+      if (!label || sumKeywords.some(k => label.includes(k))) continue;
+
+      result[dayKey][label] = {};
+      for (let ci = 1; ci < headers.length && ci - 1 < slotTimes.length; ci++) {
+        const val = Number(row[ci]) || 0;
+        result[dayKey][label][ci - 1] = val; // slot index
+      }
+    }
+  }
+  return result;
+}
+
+function getPerformers(dayKey, timeSlotStr) {
+  const performers = {SOP:[], ALT:[], TEN:[], BASS:[]};
+  if (!state.matrixData || !state.matrixData[dayKey]) return performers;
+
+  const slotIdx = timeSlotToIndex(timeSlotStr);
+  if (slotIdx === -1) return performers;
+
+  for (const member of state.config.members) {
+    const matrixEntry = state.matrixData[dayKey][member.display];
+    if (!matrixEntry) continue;
+    const avail = matrixEntry[slotIdx];
+    if (avail === 1 && performers[member.part]) {
+      performers[member.part].push(member);
+    }
+  }
+  return performers;
+}
+
+function timeSlotToIndex(slotStr) {
+  // Convert order form time string to matrix slot index
+  // e.g. "4-4:30pm" → index relative to startHour
+  const startH = state.config.matrixStartHour;
+  const endH   = state.config.matrixEndHour;
+
+  // Try to parse 24h start time
+  const h24 = parseTimeSlotTo24h(slotStr);
+  if (h24 === null) return -1;
+
+  // Index = (hour - startH) * 2 + (minute / 30)
+  const totalSlots = (endH - startH) * 2;
+  const idx = (h24.h - startH) * 2 + (h24.m === 30 ? 1 : 0);
+  if (idx < 0 || idx >= totalSlots) return -1;
+  return idx;
+}
+
+function parseTimeSlotTo24h(str) {
+  // Handles many formats:
+  // "4-4:30pm", "8-8:30pm", "11-11:30am", "8:30-9pm", "2:00pm-2:30pm", "8:00am-8:30am"
+  // We only need the START time
+  str = String(str).trim().toLowerCase().replace(/\s+/g,'');
+
+  // Try: "HH:MMam/pm-..." or "H:MMam/pm-..."
+  let m = str.match(/^(\d{1,2})(?::(\d{2}))?(am|pm)/);
+  if (!m) {
+    // Try: "H-H:30pm" or "H:30-Hpm"  — find the am/pm at end
+    const ampm = str.includes('pm') ? 'pm' : str.includes('am') ? 'am' : null;
+    if (!ampm) return null;
+    const numMatch = str.match(/^(\d{1,2})(?::(\d{2}))?/);
+    if (!numMatch) return null;
+    m = [null, numMatch[1], numMatch[2], ampm];
+  }
+
+  let hour = parseInt(m[1]);
+  const min = m[2] ? parseInt(m[2]) : 0;
+  const ap  = m[3];
+  if (ap === 'pm' && hour !== 12) hour += 12;
+  if (ap === 'am' && hour === 12) hour = 0;
+  return {h: hour, m: min};
+}
+
+// ============================================================
+// ORDER RENDERING
+// ============================================================
+function renderOrders(orders) {
+  const container = document.getElementById('ordersList');
+  container.innerHTML = '';
+  if (!orders.length) {
+    container.innerHTML = '<p class="small" style="padding:20px;text-align:center">No orders found for this filter.</p>';
+    return;
+  }
+  for (const order of orders) {
+    container.appendChild(buildOrderCard(order));
+  }
+}
+
+function buildOrderCard(order) {
+  const card = document.createElement('div');
+  card.className = 'order-card';
+  card.id = `order-card-${order.id}`;
+
+  const dayLabel = order.isVirtual ? '💻 Virtual' : `${order.dayKey} ${order.timeSlot}`;
+  const typeTag  = order.isVirtual
+    ? '<span class="badge badge-blue">Virtual</span>'
+    : '<span class="badge badge-pink">In-Person</span>';
+
+  card.innerHTML = `
+    <div class="order-card-header" onclick="toggleCard(${order.id})">
+      <span>${typeTag}</span>
+      <span class="badge badge-gray" style="font-weight:400">${esc(dayLabel)}</span>
+      <span style="font-size:0.85rem;flex:1"><strong>${esc(order.recipient)}</strong> ← ${esc(order.sender)}</span>
+      <span class="small">${esc(order.song.slice(0,40))}</span>
+      <span>▾</span>
+    </div>
+    <div class="order-card-body">
+      <div class="form-row" style="gap:20px;margin-bottom:10px;">
+        <div style="flex:1">
+          <p class="small">📍 <strong>Location:</strong> ${esc(order.location)}</p>
+          <p class="small">🎵 <strong>Song:</strong> ${esc(order.song)}</p>
+          <p class="small">📞 <strong>Contact:</strong> ${esc(order.contact)}</p>
+          ${order.special ? `<p class="small">⭐ <strong>Special Instructions:</strong> ${esc(order.special)}</p>` : ''}
+          ${order.isVirtual ? `<p class="small">📧 <strong>Virtual Email:</strong> ${esc(order.virtualEmail)}</p>` : ''}
+        </div>
+      </div>
+      ${order.isVirtual ? '' : buildPerformerEditor(order)}
+      <div class="flex-row mt-14">
+        <button class="btn btn-primary btn-sm" onclick="goToExport('${order.dayKey || 'Virtual'}')">📤 Go to Export</button>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function buildPerformerEditor(order) {
+  const parts = ['SOP','ALT','TEN','BASS'];
+  let html = `<p class="small bold mb-10">Assigned Performers (click to toggle):</p><div class="performer-grid">`;
+  for (const part of parts) {
+    html += `<div class="performer-part"><h4>${part}</h4>`;
+    for (const member of state.config.members.filter(m => m.part === part)) {
+      const selected = order.performers[part]?.some(p => p.w2m === member.w2m);
+      html += `<span class="performer-chip ${selected?'selected':''}"
+        onclick="togglePerformer(${order.id},'${part}','${member.w2m}',this)">
+        ${esc(member.display)}
+      </span>`;
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function toggleCard(id) {
+  const card = document.getElementById(`order-card-${id}`);
+  card.classList.toggle('open');
+}
+
+function togglePerformer(orderId, part, w2mName, el) {
+  const order = state.orders.find(o => o.id === orderId);
+  if (!order) return;
+  const member = state.config.members.find(m => m.w2m === w2mName);
+  if (!member) return;
+  const idx = order.performers[part]?.findIndex(p => p.w2m === w2mName);
+  if (idx >= 0) {
+    order.performers[part].splice(idx, 1);
+    el.classList.remove('selected');
+  } else {
+    if (!order.performers[part]) order.performers[part] = [];
+    order.performers[part].push(member);
+    el.classList.add('selected');
+  }
+  order.overridden = true;
+}
+
+function filterOrders(filter, btn) {
+  document.querySelectorAll('#orderDayFilter .day-tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = filter === 'all' ? state.orders :
+    filter === 'Virtual' ? state.orders.filter(o => o.isVirtual) :
+    state.orders.filter(o => o.dayKey === filter && !o.isVirtual);
+  renderOrders(filtered);
+}
+
+// ============================================================
+// EXPORT TAB
+// ============================================================
+function showExportDay(dayKey, btn) {
+  document.querySelectorAll('#exportDayTabs .day-tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.currentExportDay = dayKey;
+  renderExport(dayKey);
+}
+
+function goToExport(dayKey) {
+  const exportBtn = document.querySelector(`#exportDayTabs [data-day="${dayKey}"]`);
+  const tabBtn    = document.querySelector('.tab-btn[data-tab="export"]');
+  if (tabBtn) tabBtn.click();
+  if (exportBtn) setTimeout(() => showExportDay(dayKey, exportBtn), 100);
+}
+
+function renderExport(dayKey) {
+  const isVirtual = dayKey === 'Virtual';
+  const dayOrders = isVirtual
+    ? state.orders.filter(o => o.isVirtual)
+    : state.orders.filter(o => o.dayKey === dayKey && !o.isVirtual);
+
+  // Slack block
+  const slackBlock = document.getElementById('slackBlock');
+  const exportList  = document.getElementById('exportOrdersList');
+  exportList.innerHTML = '';
+
+  if (!isVirtual) {
+    slackBlock.style.display = 'block';
+    const sortedOrders = [...dayOrders].sort((a,b) => compareTimeSlots(a.timeSlot, b.timeSlot));
+    const slackIntros  = {
+      Mon: '@channel Hi guys tomorrow is the FIRST DAY OF LOVE NOTES WEEK OH YEAHHHH. Ok here\'s the schedule:',
+      Tue: '@channel Hi guys tomorrow is the SECOND DAY OF LOVE NOTES WEEK LETS GOOOOOOOOOO. Ok here is the schedule:',
+      Wed: '@channel Hi guys tomorrow is the THIRD DAY OF LOVE NOTES WEEK LETS GOOOOOOOOOO. Ok here da schedule:',
+      Thu: '@channel Hi guys tomorrow is the FOURTH DAY OF LOVE NOTES WEEK YEAHHHHHHHH OH YEAHHHHHHHH OH YEAHHHHHHH WAHHHHHHHH. Ok here\'s the schedule:',
+      Fri: '@channel Hi guys tomorrow is the FIFTH DAY OF LOVE NOTES WEEK YURRRRRRRRR. Ok schedule:',
+      Sat: '@channel Hi guys tomorrow is the SIXTH DAY OF LOVE NOTES WEEK YUUUUUUUUH. Ok schedule:',
+    };
+    const intro = slackIntros[dayKey] || '@channel Here\'s the schedule:';
+    const outro = dayOrders.length ? "\nThat's the schedule! Let's go deliver some LOVE NOTES 💌" : '';
+    const entries = sortedOrders.map(o => buildSlackEntry(o)).join('\n');
+    const fullAnn = `${intro}\n${entries}${outro}`;
+    document.getElementById('slackOutput').textContent = fullAnn;
+    document.getElementById('slackDayLabel').textContent = dayKey;
+
+    for (const order of sortedOrders) {
+      exportList.appendChild(buildExportCard(order));
+    }
+  } else {
+    slackBlock.style.display = 'none';
+    for (const order of dayOrders) {
+      exportList.appendChild(buildExportCard(order));
+    }
+  }
+
+  if (!dayOrders.length) {
+    exportList.innerHTML = '<p class="small" style="padding:20px;text-align:center">No orders for this day.</p>';
+  }
+}
+
+function buildExportCard(order) {
+  const div = document.createElement('div');
+  div.className = 'order-card';
+  div.style.marginBottom = '16px';
+
+  const titleLine = order.isVirtual
+    ? `💻 Virtual — ${order.sender} → ${order.recipient}`
+    : `${order.dayKey} ${order.timeSlot} — ${order.sender} → ${order.recipient}`;
+
+  const confirmMsg = order.isVirtual ? '' : buildConfirmMsg(order);
+  const emailBody  = order.isVirtual ? buildEmailBody(order) : '';
+  const slackEntry = order.isVirtual ? '' : buildSlackEntry(order);
+
+  let html = `
+    <div class="order-card-header" onclick="this.parentElement.classList.toggle('open')" style="cursor:pointer">
+      <strong style="flex:1">${esc(titleLine)}</strong>
+      <span class="small">${esc(order.song.slice(0,35))}</span>
+      <span>▾</span>
+    </div>
+    <div class="order-card-body">
+  `;
+
+  if (!order.isVirtual) {
+    html += `
+      <div class="output-block">
+        <h4>Slack Entry <button class="btn btn-outline btn-xs" onclick="copyText(this,'slack-${order.id}')">📋 Copy</button></h4>
+        <div class="output-text" id="slack-${order.id}">${esc(slackEntry)}</div>
+      </div>
+      <div class="output-block">
+        <h4>Confirmation Message (SMS) <button class="btn btn-outline btn-xs" onclick="copyText(this,'confirm-${order.id}')">📋 Copy</button></h4>
+        <div class="output-text" id="confirm-${order.id}">${esc(confirmMsg)}</div>
+      </div>
+      <div class="output-block">
+        <h4>Google Calendar Event
+          <button class="btn btn-blue btn-xs" onclick="createCalendarEvent(${order.id})" id="cal-btn-${order.id}">📅 Create Event</button>
+        </h4>
+        <p class="small" id="cal-status-${order.id}"></p>
+      </div>
+    `;
+  } else {
+    html += `
+      <div class="output-block">
+        <h4>Virtual Love Note Email
+          <button class="btn btn-outline btn-xs" onclick="copyText(this,'email-${order.id}')">📋 Copy HTML</button>
+          <button class="btn btn-blue btn-xs" onclick="createGmailDraft(${order.id})" id="gmail-btn-${order.id}" style="margin-left:4px">📧 Create Gmail Draft</button>
+        </h4>
+        <p class="small"><strong>To:</strong> ${esc(order.virtualEmail)} &nbsp;|&nbsp; <strong>Subject:</strong> Your Love Note from Medleys A Cappella 💌</p>
+        <div class="output-text" id="email-${order.id}">${esc(emailBody)}</div>
+        <p class="small" id="gmail-status-${order.id}"></p>
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+  div.innerHTML = html;
+  return div;
+}
+
+// ============================================================
+// OUTPUT BUILDERS
+// ============================================================
+function buildSlackEntry(order) {
+  const parts = ['SOP','ALT','TEN','BASS'];
+  const makeList = (part) => {
+    const members = order.performers[part] || [];
+    return members.map(m => `\t${m.slack}`).join('\n');
+  };
+
+  const specialLine = order.special ? `\nSpecial Instruction: ${order.special}` : '';
+
+  let tmpl = state.config.tmplSlack;
+  tmpl = tmpl
+    .replace('{{time}}',                order.timeSlot)
+    .replace('{{location}}',            order.location)
+    .replace('{{song}}',                order.song)
+    .replace('{{recipient}}',           order.recipient)
+    .replace('{{sender}}',              order.sender)
+    .replace('{{contact}}',             order.contact)
+    .replace('{{special_instruction}}', order.special || '')
+    .replace('{{special_instruction_line}}', specialLine)
+    .replace('{{sop_list}}',  makeList('SOP'))
+    .replace('{{alt_list}}',  makeList('ALT'))
+    .replace('{{ten_list}}',  makeList('TEN'))
+    .replace('{{bass_list}}', makeList('BASS'));
+  return tmpl;
+}
+
+function buildConfirmMsg(order) {
+  const firstName = order.sender.split(/\s+/)[0];
+  const specialBlock = order.special
+    ? `\nAnd regarding your special instruction, ${order.special}`
+    : '';
+  let tmpl = state.config.tmplConfirm;
+  tmpl = tmpl
+    .replace('{{sender}}',            order.sender)
+    .replace('{{sender_first}}',      firstName)
+    .replace('{{recipient}}',         order.recipient)
+    .replace('{{location}}',          order.location)
+    .replace('{{time}}',              order.timeSlot)
+    .replace('{{song}}',              order.song)
+    .replace('{{special_instruction}}',      order.special || '')
+    .replace('{{special_instruction_block}}', specialBlock);
+  return tmpl;
+}
+
+function buildEmailBody(order) {
+  const urlMap = {};
+  for (const s of state.config.songs) urlMap[s.name.toLowerCase().trim()] = s.url;
+  const songUrl = urlMap[order.song.toLowerCase().trim()] || '#';
+  let tmpl = state.config.tmplEmail;
+  tmpl = tmpl
+    .replace('{{recipient}}',   order.recipient)
+    .replace('{{sender}}',      order.sender)
+    .replace('{{youtube_url}}', songUrl);
+  return tmpl;
+}
+
+// ============================================================
+// GOOGLE CALENDAR
+// ============================================================
+async function createCalendarEvent(orderId) {
+  const order  = state.orders.find(o => o.id === orderId);
+  const btn    = document.getElementById(`cal-btn-${orderId}`);
+  const status = document.getElementById(`cal-status-${orderId}`);
+
+  if (!state.calendarToken) {
+    toast('⚠️ Connect your Google Calendar account in Setup first.');
+    return;
+  }
+  if (!order) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    // Build event description
+    const parts   = ['SOP','ALT','TEN','BASS'];
+    const makeList = p => (order.performers[p]||[]).map(m => `\t${m.slack}`).join('\n');
+    let description = `Location: ${order.location}
+Song: ${order.song}
+Recipient Name: ${order.recipient}
+Sender Name: ${order.sender}
+Contact: ${order.contact}`;
+    if (order.special) description += `\nSpecial Instruction: ${order.special}`;
+    description += `\nAttendance:\n`;
+    for (const p of parts) {
+      description += `\t${p}S:\n${makeList(p)}\n`;
+    }
+
+    // Parse datetime from dayKey + timeSlot
+    const {startDT, endDT} = buildEventDateTime(order.dayKey, order.timeSlot);
+    if (!startDT) throw new Error('Could not parse performance time. Check the time slot format.');
+
+    const event = {
+      summary:     `Love Note — ${order.recipient}`,
+      description,
+      start: {dateTime: startDT, timeZone: 'America/Los_Angeles'},
+      end:   {dateTime: endDT,   timeZone: 'America/Los_Angeles'},
+    };
+
+    const resp = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${state.calendarToken}`,
+        'Content-Type':  'application/json',
+      },
+      body: JSON.stringify(event),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error?.message || 'Calendar API error');
+    }
+
+    const created = await resp.json();
+    status.innerHTML = `✅ Event created! <a href="${created.htmlLink}" target="_blank">View in Calendar</a>`;
+    btn.innerHTML = '✅ Created';
+    toast('✅ Calendar event created!');
+  } catch(err) {
+    status.textContent = '❌ ' + err.message;
+    btn.innerHTML = '📅 Create Event';
+    btn.disabled  = false;
+    toast('❌ Calendar error: ' + err.message);
+  }
+}
+
+function buildEventDateTime(dayKey, timeSlotStr) {
+  // Map dayKey to a 2026 date
+  const dates = {Mon:'2026-02-09', Tue:'2026-02-10', Wed:'2026-02-11',
+                 Thu:'2026-02-12', Fri:'2026-02-13', Sat:'2026-02-14'};
+  const dateStr = dates[dayKey];
+  if (!dateStr) return {startDT: null, endDT: null};
+
+  // Parse start time
+  const parsed = parseTimeSlotTo24h(timeSlotStr);
+  if (!parsed) return {startDT: null, endDT: null};
+
+  const padded = n => String(n).padStart(2,'0');
+  const startDT = `${dateStr}T${padded(parsed.h)}:${padded(parsed.m)}:00`;
+  const endH = parsed.m === 30 ? parsed.h + 1 : parsed.h;
+  const endM = parsed.m === 30 ? 0 : 30;
+  const endDT   = `${dateStr}T${padded(endH)}:${padded(endM)}:00`;
+  return {startDT, endDT};
+}
+
+// ============================================================
+// GMAIL DRAFT
+// ============================================================
+async function createGmailDraft(orderId) {
+  const order  = state.orders.find(o => o.id === orderId);
+  const btn    = document.getElementById(`gmail-btn-${orderId}`);
+  const status = document.getElementById(`gmail-status-${orderId}`);
+
+  if (!state.gmailToken) {
+    toast('⚠️ Connect your Gmail account in Setup first.');
+    return;
+  }
+  if (!order) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const to      = order.virtualEmail.trim();
+    const subject = 'Your Love Note from Medleys A Cappella 💌';
+    const body    = buildEmailBody(order);
+
+    if (!to || !to.includes('@')) throw new Error('No valid recipient email address for this order.');
+
+    const rawEmail = buildMimeMessage(to, subject, body);
+    const encoded  = btoa(unescape(encodeURIComponent(rawEmail)))
+      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+
+    const resp = await fetch('https://www.googleapis.com/gmail/v1/users/me/drafts', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${state.gmailToken}`,
+        'Content-Type':  'application/json',
+      },
+      body: JSON.stringify({message: {raw: encoded}}),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error?.message || 'Gmail API error');
+    }
+
+    status.textContent = `✅ Gmail draft created for ${to}`;
+    btn.innerHTML = '✅ Draft Created';
+    toast('✅ Gmail draft created!');
+  } catch(err) {
+    status.textContent = '❌ ' + err.message;
+    btn.innerHTML = '📧 Create Gmail Draft';
+    btn.disabled  = false;
+    toast('❌ Gmail error: ' + err.message);
+  }
+}
+
+function buildMimeMessage(to, subject, htmlBody) {
+  return [
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/html; charset=UTF-8',
+    '',
+    htmlBody,
+  ].join('\r\n');
+}
+
+// ============================================================
+// COPY HELPERS
+// ============================================================
+function copySlackAnn() {
+  const text = document.getElementById('slackOutput').textContent;
+  copyToClipboard(text);
+  toast('📋 Slack announcement copied!');
+}
+
+function copyText(btn, id) {
+  const el   = document.getElementById(id);
+  const text = el ? el.textContent : '';
+  copyToClipboard(text);
+  const orig = btn.textContent;
+  btn.textContent = '✅ Copied!';
+  setTimeout(() => btn.textContent = orig, 1500);
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity  = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function esc(str) {
+  return String(str||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function toast(msg, duration=3000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+}
+
+function compareTimeSlots(a, b) {
+  const ta = parseTimeSlotTo24h(a);
+  const tb = parseTimeSlotTo24h(b);
+  if (!ta || !tb) return 0;
+  return (ta.h * 60 + ta.m) - (tb.h * 60 + tb.m);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  loadConfig();
+  initTabs();
+  populateSetupUI();
+
+  // Set default matrix dates
+  document.getElementById('matrixStartDate').value = '2026-02-09';
+  document.getElementById('matrixEndDate').value   = '2026-02-14';
+
+  // Initial export render
+  const firstDayBtn = document.querySelector('#exportDayTabs .day-tab-btn');
+  if (firstDayBtn) renderExport('Mon');
+});
+</script>
+</body>
+</html>
