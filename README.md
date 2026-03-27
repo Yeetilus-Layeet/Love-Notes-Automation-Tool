@@ -8,7 +8,7 @@ This tool automates the behind-the-scenes work for **Love Notes**, Medleys A Cap
 ## Table of Contents
 
 1. [What This Tool Does](#what-this-tool-does)
-2. [What You Need Before Starting](#what-you-need-before-starting)
+2. [What You Need Before Starting (You don't need to read this section other than for trouble shooting)](#what-you-need-before-starting)
 3. [One-Time Setup (You don't need to read this section other than for trouble shooting)](#one-time-setup)
    - [Step A: Put the Tool on GitHub Pages](#step-a-put-the-tool-on-github-pages)
    - [Step B: Google Cloud Project Setup](#step-b-google-cloud-project-setup)
