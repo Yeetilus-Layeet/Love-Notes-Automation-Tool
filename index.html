@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💌 Love Notes Manager — Medleys A Cappella</title>
+<title>💌 Love Notes Automation Tool — Medleys A Cappella</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
@@ -453,8 +453,8 @@ td input:focus, td select:focus { outline: none; border-color: var(--red); }
 <header>
   <div class="heart">💌</div>
   <div>
-    <h1>Love Notes Manager</h1>
-    <p>Medleys A Cappella — Fundraiser Automation Tool</p>
+    <h1>Love Notes Automation Tool</h1>
+    <p>Medleys A Cappella</p>
   </div>
 </header>
 
@@ -616,7 +616,7 @@ td input:focus, td select:focus { outline: none; border-color: var(--red); }
       The URL below is pre-filled for your repo — only change it if you rename the image file or move repos.<br>
       Leave blank to fall back to a plain text header instead.
     </p>
-    <input type="text" id="bannerImageUrl" placeholder="https://yeetilus-layeet.github.io/Love-Notes-Automation-Tool/Virtual_Love_Note_Header_Image.png" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;margin-bottom:18px;" />
+    <input type="text" id="bannerImageUrl" placeholder="https://yeetilus-layeet.github.io/Love-Notes-Automation-Tool/Virtual Love Note Header Image.png" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;margin-bottom:18px;" />
     <div id="bannerPreview" style="margin-bottom:12px;"></div>
 
     <hr class="divider">
@@ -956,7 +956,7 @@ const state = {
 function defaultConfig() {
   return {
     clientId: '',
-    bannerImageUrl: 'https://yeetilus-layeet.github.io/Love-Notes-Automation-Tool/Virtual_Love_Note_Header_Image.png',
+    bannerImageUrl: 'https://yeetilus-layeet.github.io/Love-Notes-Automation-Tool/Virtual Love Note Header Image.png',
     emailSubject: DEFAULT_EMAIL_SUBJECT,
     members: JSON.parse(JSON.stringify(DEFAULT_MEMBERS)),
     songs: JSON.parse(JSON.stringify(DEFAULT_SONGS)),
