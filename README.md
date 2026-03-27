@@ -9,7 +9,7 @@ This tool automates the behind-the-scenes work for **Love Notes**, Medleys A Cap
 
 1. [What This Tool Does](#what-this-tool-does)
 2. [What You Need Before Starting](#what-you-need-before-starting)
-3. [One-Time Setup (Do This Once, At The Start)](#one-time-setup)
+3. [One-Time Setup (You don't need to read this section other than for trouble shooting)](#one-time-setup)
    - [Step A: Put the Tool on GitHub Pages](#step-a-put-the-tool-on-github-pages)
    - [Step B: Google Cloud Project Setup](#step-b-google-cloud-project-setup)
    - [Step C: Configure the Tool](#step-c-configure-the-tool)
@@ -89,7 +89,7 @@ GitHub Pages lets you host a website for free using a GitHub repository. The too
 - Under "Source," click the dropdown that says **"None"** and change it to **"main"**
 - Leave the folder set to **"/ (root)"**
 - Click **"Save"**
-- Wait 1–2 minutes, then refresh the page. You'll see a box that says: **"Your site is live at https://YOUR-USERNAME.github.io/love-notes-automation-tool/"**
+- Wait 1–2 minutes, then refresh the page. You'll see a box that says: **"Your site is live at https://YOUR-USERNAME.github.io/Love-Notes-Automation-Tool/"**
 
 **6. Bookmark that URL** — that's your Love Notes Automation Tool. Share it only with future Love Notes managers.
 
@@ -195,7 +195,7 @@ This generates the identifier that goes into the tool.
 
 #### Part 5 — Enter the Client ID in the Tool
 
-1. Open your Love Notes Automation Tool at `https://YOUR-USERNAME.github.io/love-notes-automation-tool/`
+1. Open your Love Notes Automation Tool at `https://YOUR-USERNAME.github.io/Love-Notes-Automation-Tool/`
 2. Go to the **⚙️ Setup & Config** tab
 3. Paste your Client ID into the **"OAuth Client ID"** field
 4. Click **"💾 Save Client ID"**
@@ -264,7 +264,7 @@ At the start of each new Love Notes cycle, do the following before anything else
 
 **Steps:**
 1. Create your When2Meet poll as usual, covering each day of Love Notes week in 15-minute increments
-2. Once all members have filled it out, go to your When2Meet and click **"Export to CSV"** (on the results page)
+2. Once all members have filled it out, go to your When2Meet and add a "&csv" at the end of the URL (this downloads the csv file).
 3. Open the tool and go to **📊 Availability Matrix**
 4. Upload the CSV file
 5. The tool will show you which members it found and flag any names that don't match your roster
@@ -323,7 +323,7 @@ Do this the night before each performance day, ideally around 9pm.
 ## File Formats Reference
 
 ### When2Meet CSV
-- Export directly from When2Meet's results page using "Export to CSV"
+- Export directly from When2Meet page by adding "&csv" at the end of the URL (this downloads the csv file)
 - First row is headers (blank cell, then one column per 15-minute time slot)
 - Each subsequent row is one member (their name in the first column, "Yes"/"No" in each time slot)
 - **The name in the first column must match the "When2Meet Name" in the Member Roster exactly** (case-insensitive)
