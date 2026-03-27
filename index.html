@@ -616,7 +616,7 @@ td input:focus, td select:focus { outline: none; border-color: var(--red); }
       The URL below is pre-filled for your repo — only change it if you rename the image file or move repos.<br>
       Leave blank to fall back to a plain text header instead.
     </p>
-    <input type="text" id="bannerImageUrl" placeholder="https://yeetilus-layeet.github.io/Love-Notes-Automation-Tool/Virtual Love Note Header Image.png" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;margin-bottom:18px;" />
+    <input type="text" id="bannerImageUrl" placeholder="https://yeetilus-layeet.github.io/Love-Notes-Automation-Tool/Virtual_Love_Note_Header_Image.png" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;margin-bottom:18px;" />
     <div id="bannerPreview" style="margin-bottom:12px;"></div>
 
     <hr class="divider">
@@ -956,7 +956,7 @@ const state = {
 function defaultConfig() {
   return {
     clientId: '',
-    bannerImageUrl: 'https://yeetilus-layeet.github.io/Love-Notes-Automation-Tool/Virtual Love Note Header Image.png',
+    bannerImageUrl: 'https://yeetilus-layeet.github.io/Love-Notes-Automation-Tool/Virtual_Love_Note_Header_Image.png',
     emailSubject: DEFAULT_EMAIL_SUBJECT,
     members: JSON.parse(JSON.stringify(DEFAULT_MEMBERS)),
     songs: JSON.parse(JSON.stringify(DEFAULT_SONGS)),
@@ -2016,7 +2016,7 @@ function buildConfirmMsg(order) {
   return tmpl;
 }
 
-function buildEmailBody(order) {
+function buildEmailBody(order, imageSrcOverride = null) {
   const urlMap = {};
   for (const s of state.config.songs) urlMap[s.name.toLowerCase().trim()] = s.url;
   const songUrl = urlMap[order.song.toLowerCase().trim()] || '#';
@@ -2045,15 +2045,17 @@ function buildEmailBody(order) {
         '<a href="https://downtownwomenscenter.org/" style="color:#c0392b;">https://downtownwomenscenter.org/</a>'
       );
     }
-    return `<p style="margin:0 0 12px 0;">${line}</p>`;
+    return `<p style="margin:0;">${line}</p>`;
   });
 
-  // Banner: use image URL if set, otherwise render a text-based header
-  const bannerUrl = state.config.bannerImageUrl || '';
+  // Banner: imageSrcOverride is set to "cid:banner-image" when the image is
+  // being embedded inline in the MIME message (the reliable way to show images
+  // in Gmail). Falls back to external URL for preview, or text banner if neither.
+  const bannerUrl = imageSrcOverride || (state.config.bannerImageUrl || '').trim();
   let bannerHtml;
   if (bannerUrl) {
     bannerHtml = `<div style="text-align:center;margin-bottom:28px;">
-      <img src="${bannerUrl}" alt="Medleys A Cappella Presents Love Notes" style="max-width:100%;height:auto;" />
+      <img src="${bannerUrl}" alt="Medleys A Cappella Presents Love Notes" style="max-width:100%;height:auto;display:block;margin:0 auto;" />
     </div>`;
   } else {
     bannerHtml = `<div style="background:#fff;text-align:center;padding:24px 20px 16px;border-bottom:2px solid #f0d0d0;margin-bottom:28px;">
@@ -2178,16 +2180,47 @@ async function createGmailDraft(orderId) {
   try {
     const to      = order.virtualEmail.trim();
     const subject = state.config.emailSubject || DEFAULT_EMAIL_SUBJECT;
-    const body    = buildEmailBody(order);
 
     if (!to || !to.includes('@')) throw new Error('No valid recipient email address for this order.');
 
-    const rawEmail = buildMimeMessage(to, subject, body);
-    // The raw message must be base64url-encoded for the Gmail API.
-    // Since buildMimeMessage already base64-encodes the body, we encode the
-    // full raw string (headers + base64 body) as base64url here.
-    const encoded = btoa(unescape(encodeURIComponent(rawEmail)))
-      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    // Try to fetch the banner image and embed it inline (CID).
+    // This is the only reliable way to display images in Gmail —
+    // externally hosted images are often blocked by Gmail's proxy.
+    const bannerUrl = (state.config.bannerImageUrl || '').trim();
+    let imageB64    = null;
+    let imageMime   = 'image/png';
+
+    if (bannerUrl) {
+      try {
+        status.textContent = '⏳ Fetching banner image…';
+        const imgResp = await fetch(bannerUrl);
+        if (imgResp.ok) {
+          const blob    = await imgResp.blob();
+          imageMime     = blob.type || 'image/png';
+          const arrBuf  = await blob.arrayBuffer();
+          const bytes   = new Uint8Array(arrBuf);
+          // Convert binary to base64 safely (avoids btoa UTF-8 crash)
+          let binary = '';
+          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+          imageB64 = btoa(binary);
+        }
+      } catch(imgErr) {
+        // Image fetch failed — fall back to text banner, don't abort draft creation
+        console.warn('Could not fetch banner image:', imgErr);
+      }
+    }
+
+    // Build the HTML body. If we got the image, reference it via CID;
+    // otherwise use the text fallback banner.
+    const body = buildEmailBody(order, imageB64 ? 'cid:banner-image' : null);
+
+    // Build the full MIME message (multipart/related if image, plain HTML if not)
+    const rawEmail = imageB64
+      ? buildMimeMessageWithImage(to, subject, body, imageB64, imageMime)
+      : buildMimeMessageHtmlOnly(to, subject, body);
+
+    // Base64url-encode the full raw MIME string for the Gmail API
+    const encoded = arrayBufferToBase64url(new TextEncoder().encode(rawEmail));
 
     const resp = await fetch('https://www.googleapis.com/gmail/v1/users/me/drafts', {
       method: 'POST',
@@ -2203,7 +2236,8 @@ async function createGmailDraft(orderId) {
       throw new Error(err.error?.message || 'Gmail API error');
     }
 
-    status.textContent = `✅ Gmail draft created for ${to}`;
+    const bannerNote = imageB64 ? ' (banner image embedded)' : ' (banner image unavailable — text fallback used)';
+    status.textContent = `✅ Gmail draft created for ${to}${bannerNote}`;
     btn.innerHTML = '✅ Draft Created';
     toast('✅ Gmail draft created!');
   } catch(err) {
@@ -2214,12 +2248,56 @@ async function createGmailDraft(orderId) {
   }
 }
 
-function buildMimeMessage(to, subject, htmlBody) {
-  // Base64-encode the HTML body separately (avoids UTF-8/emoji corruption)
+// Converts a Uint8Array to a base64url string (safe for any binary content)
+function arrayBufferToBase64url(uint8Array) {
+  let binary = '';
+  for (let i = 0; i < uint8Array.length; i++) binary += String.fromCharCode(uint8Array[i]);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+// Build a multipart/related MIME message that embeds the banner image inline.
+// The HTML body references the image as src="cid:banner-image", and the image
+// is attached as a MIME part with Content-ID: <banner-image>.
+// This is the standard email way to include images — they travel with the email
+// itself and don't depend on any external server.
+function buildMimeMessageWithImage(to, subject, htmlBody, imageB64, imageMime) {
+  const boundary = 'LoveNotes_' + Math.random().toString(36).slice(2);
+  const encodedSubject = '=?UTF-8?B?' + btoa(unescape(encodeURIComponent(subject))) + '?=';
+
+  // Chunk base64 into 76-char lines (RFC 2045 requirement)
+  const chunkB64 = str => str.match(/.{1,76}/g).join('\r\n');
+
+  return [
+    `To: ${to}`,
+    `Subject: ${encodedSubject}`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/related; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: base64',
+    '',
+    chunkB64(btoa(unescape(encodeURIComponent(htmlBody)))),
+    '',
+    `--${boundary}`,
+    `Content-Type: ${imageMime}`,
+    'Content-Transfer-Encoding: base64',
+    'Content-ID: <banner-image>',
+    'Content-Disposition: inline; filename="banner.png"',
+    '',
+    chunkB64(imageB64),
+    '',
+    `--${boundary}--`,
+  ].join('\r\n');
+}
+
+// Simple HTML-only MIME message (fallback when no image is available)
+function buildMimeMessageHtmlOnly(to, subject, htmlBody) {
+  const encodedSubject = '=?UTF-8?B?' + btoa(unescape(encodeURIComponent(subject))) + '?=';
   const bodyB64 = btoa(unescape(encodeURIComponent(htmlBody)));
   return [
     `To: ${to}`,
-    `Subject: ${subject}`,
+    `Subject: ${encodedSubject}`,
     'MIME-Version: 1.0',
     'Content-Type: text/html; charset=UTF-8',
     'Content-Transfer-Encoding: base64',
