@@ -1,4 +1,4 @@
-# 💌 Love Notes Manager
+# 💌 Love Notes Automation Tool
 ### Medleys A Cappella — Fundraiser Automation Tool
 
 This tool automates the behind-the-scenes work for **Love Notes**, Medleys A Cappella's annual singing valentine fundraiser for the LA Downtown Women's Center. It handles availability matrix generation, order management, Slack announcement drafting, confirmation message writing, Google Calendar event creation, and virtual love note email drafting.
@@ -46,7 +46,7 @@ This tool automates the behind-the-scenes work for **Love Notes**, Medleys A Cap
 - A **GitHub account** (free at github.com) — this is where the tool lives
 - A **Google account** with access to the club's Google Calendar
 - A **Google account** for the club's Gmail/Sheets (may be the same or different account)
-- The **love-notes-manager.html** file (this is the tool itself)
+- The **love-notes-automation-tool.html** file (this is the tool itself)
 - Basic comfort with clicking through websites — no coding required
 
 > **Note for the future manager reading this:** If the previous Love Notes manager is still around, ask them to walk you through Steps A and B in person. The Google Cloud setup in Step B is the only part that might feel unfamiliar — it's about 15 minutes of clicking through Google's website, and the guide below walks you through every screen.
@@ -69,14 +69,14 @@ GitHub Pages lets you host a website for free using a GitHub repository. The too
 
 **2. Create a new repository**
 - Once logged in, click the green **"New"** button on the left sidebar, or go to [github.com/new](https://github.com/new).
-- **Repository name:** `love-notes-manager` (or anything you like)
+- **Repository name:** `love-notes-automation-tool` (or anything you like)
 - **Visibility:** Set to **Private** (this keeps your code accessible only to you)
 - Check **"Add a README file"**
 - Click **"Create repository"**
 
 **3. Upload the tool file**
 - Inside your new repository, click **"Add file"** → **"Upload files"**
-- Drag and drop `love-notes-manager.html` onto the page
+- Drag and drop `love-notes-automation-tool.html` onto the page
 - **Important:** Rename the file to `index.html` before uploading, OR after uploading, click the file, click the pencil ✏️ icon to edit, and rename it at the top to `index.html`
 - Scroll down and click **"Commit changes"**
 
@@ -89,9 +89,9 @@ GitHub Pages lets you host a website for free using a GitHub repository. The too
 - Under "Source," click the dropdown that says **"None"** and change it to **"main"**
 - Leave the folder set to **"/ (root)"**
 - Click **"Save"**
-- Wait 1–2 minutes, then refresh the page. You'll see a box that says: **"Your site is live at https://YOUR-USERNAME.github.io/love-notes-manager/"**
+- Wait 1–2 minutes, then refresh the page. You'll see a box that says: **"Your site is live at https://YOUR-USERNAME.github.io/love-notes-automation-tool/"**
 
-**6. Bookmark that URL** — that's your Love Notes Manager. Share it only with future Love Notes managers.
+**6. Bookmark that URL** — that's your Love Notes Automation Tool. Share it only with future Love Notes managers.
 
 > **Security note:** Even though your repository is private, GitHub Pages URLs are publicly accessible by default. The tool itself doesn't contain any passwords or sensitive data — but to be safe, don't share the URL publicly.
 
@@ -113,10 +113,10 @@ Google requires any app that accesses Gmail or Google Calendar to be registered 
 2. Sign in with the **club Gmail account** (the one used for sending virtual love note emails and accessing the responses spreadsheet)
 3. At the very top of the page, you'll see a dropdown that says **"Select a project"** (or shows an existing project name). Click it.
 4. In the popup, click **"New Project"** (top right corner of the popup)
-5. **Project name:** `Love Notes Manager`
+5. **Project name:** `Love Notes Automation Tool``
 6. Leave "Organization" as-is
 7. Click **"Create"**
-8. Wait a few seconds, then click the **"Select a project"** dropdown again and select **"Love Notes Manager"**
+8. Wait a few seconds, then click the **"Select a project"** dropdown again and select **"Love Notes Automation Tool"**
 
 ---
 
@@ -145,7 +145,7 @@ This is the screen users see when they click "Sign in with Google" in the tool.
 2. For "User Type," select **"External"**
 3. Click **"Create"**
 4. Fill in the form:
-   - **App name:** `Love Notes Manager`
+   - **App name:** `Love Notes Automation Tool`
    - **User support email:** your club email
    - **Developer contact information:** your club email
    - Leave everything else blank
@@ -171,7 +171,7 @@ This generates the identifier that goes into the tool.
 2. Click **"+ Create Credentials"** at the top
 3. Select **"OAuth client ID"**
 4. For **"Application type"**, select **"Web application"**
-5. **Name:** `Love Notes Manager Web Client`
+5. **Name:** `Love Notes Automation Tool Web Client`
 6. Under **"Authorized JavaScript origins"**, click **"+ Add URI"** and add:
    ```
    https://YOUR-USERNAME.github.io
@@ -195,7 +195,7 @@ This generates the identifier that goes into the tool.
 
 #### Part 5 — Enter the Client ID in the Tool
 
-1. Open your Love Notes Manager at `https://YOUR-USERNAME.github.io/love-notes-manager/`
+1. Open your Love Notes Automation Tool at `https://YOUR-USERNAME.github.io/love-notes-automation-tool/`
 2. Go to the **⚙️ Setup & Config** tab
 3. Paste your Client ID into the **"OAuth Client ID"** field
 4. Click **"💾 Save Client ID"**
