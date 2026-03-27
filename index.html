@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💌 Love Notes Automation Tool</title>
+<title>💌 Love Notes Manager — Medleys A Cappella</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
@@ -453,8 +453,8 @@ td input:focus, td select:focus { outline: none; border-color: var(--red); }
 <header>
   <div class="heart">💌</div>
   <div>
-    <h1>Love Notes Automation Tool</h1>
-    <p>Medleys A Cappella</p>
+    <h1>Love Notes Manager</h1>
+    <p>Medleys A Cappella — Fundraiser Automation Tool</p>
   </div>
 </header>
 
@@ -604,9 +604,25 @@ td input:focus, td select:focus { outline: none; border-color: var(--red); }
     <textarea id="tmplConfirm" rows="10"></textarea>
 
     <hr class="divider">
-    <h3 style="font-size:0.88rem; margin-bottom:6px;">Virtual Love Note Email Body (HTML)</h3>
-    <p class="hint mb-10">Placeholders: {{recipient}}, {{sender}}, {{youtube_url}}. The link will be embedded as a hyperlink on the word "this".</p>
-    <textarea id="tmplEmail" rows="14"></textarea>
+    <h3 style="font-size:0.88rem; margin-bottom:6px;">Virtual Love Note Email Subject</h3>
+    <p class="hint mb-10">This is the subject line customers receive. Matches what was used in 2025–26.</p>
+    <input type="text" id="emailSubject" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;margin-bottom:18px;" />
+
+    <hr class="divider">
+    <h3 style="font-size:0.88rem; margin-bottom:6px;">Virtual Love Note Banner Image URL</h3>
+    <p class="hint mb-10">
+      The "MEDLEYS A CAPPELLA PRESENTS LOVE NOTES" banner image that appears at the top of the email.
+      The image file (<code>Virtual_Love_Note_Header_Image.png</code>) must be uploaded to your GitHub repository alongside <code>index.html</code>.
+      The URL below is pre-filled for your repo — only change it if you rename the image file or move repos.<br>
+      Leave blank to fall back to a plain text header instead.
+    </p>
+    <input type="text" id="bannerImageUrl" placeholder="https://yeetilus-layeet.github.io/Love-Notes-Automation-Tool/Virtual_Love_Note_Header_Image.png" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;margin-bottom:18px;" />
+    <div id="bannerPreview" style="margin-bottom:12px;"></div>
+
+    <hr class="divider">
+    <h3 style="font-size:0.88rem; margin-bottom:6px;">Virtual Love Note Email Body</h3>
+    <p class="hint mb-10">Edit the text of the email body. Do not remove the <code>{{recipient}}</code>, <code>{{sender}}</code>, or <code>{{youtube_url}}</code> placeholders — they are filled in automatically for each order. The "this" hyperlink and banner image are added automatically.</p>
+    <textarea id="tmplEmail" rows="10"></textarea>
 
     <div class="flex-row mt-14">
       <button class="btn btn-outline btn-sm" onclick="resetTemplates()">↩ Reset to Defaults</button>
@@ -756,6 +772,9 @@ td input:focus, td select:focus { outline: none; border-color: var(--red); }
       create Google Calendar events, and create Gmail drafts for virtual love notes.
       Load your orders in the Order Dashboard tab first.
     </p>
+    <div class="info-box">
+      📋 <strong>Where are the confirmation messages?</strong> Expand any in-person order card below — each card contains three sections: the Slack entry, the <strong>Confirmation Message</strong> (copy and paste into iMessage the morning of the performance), and the Google Calendar event button.
+    </div>
     <div class="day-tabs" id="exportDayTabs">
       <button class="day-tab-btn active" data-day="Mon" onclick="showExportDay('Mon',this)">Mon 2/9</button>
       <button class="day-tab-btn" data-day="Tue" onclick="showExportDay('Tue',this)">Tue 2/10</button>
@@ -904,16 +923,17 @@ To: {{recipient}}
 Song: {{song}}{{special_instruction_block}}
 See you soon!`;
 
-const DEFAULT_TMPL_EMAIL = `Greetings {{recipient}},
+const DEFAULT_EMAIL_SUBJECT = `Valentine's Day Surprise!!`;
 
+// The email body template — edit the text lines freely.
+// {{recipient}}, {{sender}}, {{youtube_url}}, {{banner_img_tag}} are replaced at send time.
+// Do NOT remove the {{...}} placeholders.
+const DEFAULT_TMPL_EMAIL =
+`Greetings {{recipient}},
 Happy Valentine's Day from Medleys A Cappella!
-
 Every year, we fundraise for the LA Downtown Women's Center by selling singing valentines, and this year {{sender}} has sent one to YOU!
-
-Below you will find a link to your very own Love Note. We hope <a href="{{youtube_url}}">this</a> brightens your day!
-
+Below you will find a link to your very own Love Note. We hope this brightens your day!
 If you wish to learn more about the Downtown Women's Center, feel free to visit this link to learn more about their mission https://downtownwomenscenter.org/.
-
 Best,
 Medleys A Cappella`;
 
@@ -936,6 +956,8 @@ const state = {
 function defaultConfig() {
   return {
     clientId: '',
+    bannerImageUrl: 'https://yeetilus-layeet.github.io/Love-Notes-Automation-Tool/Virtual_Love_Note_Header_Image.png',
+    emailSubject: DEFAULT_EMAIL_SUBJECT,
     members: JSON.parse(JSON.stringify(DEFAULT_MEMBERS)),
     songs: JSON.parse(JSON.stringify(DEFAULT_SONGS)),
     colMap: JSON.parse(JSON.stringify(DEFAULT_COL_MAP)),
@@ -963,7 +985,9 @@ function loadConfig() {
 
 function saveConfig() {
   // Read from UI
-  state.config.clientId = document.getElementById('clientId').value.trim();
+  state.config.clientId        = document.getElementById('clientId').value.trim();
+  state.config.bannerImageUrl  = document.getElementById('bannerImageUrl').value.trim();
+  state.config.emailSubject    = document.getElementById('emailSubject').value.trim() || DEFAULT_EMAIL_SUBJECT;
   state.config.matrixStartHour = parseInt(document.getElementById('matrixStartHour').value) || 8;
   state.config.matrixEndHour   = parseInt(document.getElementById('matrixEndHour').value)   || 21;
   state.config.tmplSlack   = document.getElementById('tmplSlack').value;
@@ -1016,7 +1040,9 @@ function saveClientId() {
 // ============================================================
 function populateSetupUI() {
   const c = state.config;
-  document.getElementById('clientId').value = c.clientId || '';
+  document.getElementById('clientId').value      = c.clientId || '';
+  document.getElementById('bannerImageUrl').value = c.bannerImageUrl || '';
+  document.getElementById('emailSubject').value   = c.emailSubject || DEFAULT_EMAIL_SUBJECT;
   document.getElementById('matrixStartHour').value = c.matrixStartHour;
   document.getElementById('matrixEndHour').value   = c.matrixEndHour;
   document.getElementById('tmplSlack').value   = c.tmplSlack;
@@ -1098,7 +1124,20 @@ function resetTemplates() {
   document.getElementById('tmplSlack').value   = DEFAULT_TMPL_SLACK;
   document.getElementById('tmplConfirm').value = DEFAULT_TMPL_CONFIRM;
   document.getElementById('tmplEmail').value   = DEFAULT_TMPL_EMAIL;
+  document.getElementById('emailSubject').value = DEFAULT_EMAIL_SUBJECT;
   toast('Templates reset to defaults. Click Save to keep.');
+}
+
+function updateBannerPreview() {
+  const url = document.getElementById('bannerImageUrl').value.trim();
+  const preview = document.getElementById('bannerPreview');
+  if (!preview) return;
+  if (url) {
+    preview.innerHTML = `<p class="hint" style="margin-bottom:6px;">Banner preview:</p>
+      <img src="${url}" alt="Banner preview" style="max-width:100%;max-height:120px;border:1px solid var(--border);border-radius:6px;" onerror="this.parentElement.innerHTML='<span class=small style=color:var(--red)>⚠️ Could not load image from that URL. Check the address and make sure the file is publicly accessible.</span>'" />`;
+  } else {
+    preview.innerHTML = `<p class="hint">No banner URL set — a text-based header will be used in emails.</p>`;
+  }
 }
 
 function loadSongUrlFile(input) {
@@ -1874,7 +1913,7 @@ function renderExport(dayKey) {
 
 function buildExportCard(order) {
   const div = document.createElement('div');
-  div.className = 'order-card';
+  div.className = 'order-card open'; // auto-expanded so all outputs are immediately visible
   div.style.marginBottom = '16px';
 
   const titleLine = order.isVirtual
@@ -1918,7 +1957,7 @@ function buildExportCard(order) {
           <button class="btn btn-outline btn-xs" onclick="copyText(this,'email-${order.id}')">📋 Copy HTML</button>
           <button class="btn btn-blue btn-xs" onclick="createGmailDraft(${order.id})" id="gmail-btn-${order.id}" style="margin-left:4px">📧 Create Gmail Draft</button>
         </h4>
-        <p class="small"><strong>To:</strong> ${esc(order.virtualEmail)} &nbsp;|&nbsp; <strong>Subject:</strong> Your Love Note from Medleys A Cappella 💌</p>
+        <p class="small"><strong>To:</strong> ${esc(order.virtualEmail)} &nbsp;|&nbsp; <strong>Subject:</strong> ${esc(state.config.emailSubject || DEFAULT_EMAIL_SUBJECT)}</p>
         <div class="output-text" id="email-${order.id}">${esc(emailBody)}</div>
         <p class="small" id="gmail-status-${order.id}"></p>
       </div>
@@ -1981,12 +2020,54 @@ function buildEmailBody(order) {
   const urlMap = {};
   for (const s of state.config.songs) urlMap[s.name.toLowerCase().trim()] = s.url;
   const songUrl = urlMap[order.song.toLowerCase().trim()] || '#';
-  let tmpl = state.config.tmplEmail;
-  tmpl = tmpl
-    .replace('{{recipient}}',   order.recipient)
-    .replace('{{sender}}',      order.sender)
-    .replace('{{youtube_url}}', songUrl);
-  return tmpl;
+
+  // Get the plain-text template and fill in placeholders
+  let bodyText = state.config.tmplEmail
+    .replace(/{{recipient}}/g, order.recipient)
+    .replace(/{{sender}}/g,    order.sender)
+    .replace(/{{youtube_url}}/g, songUrl);
+
+  // Convert each line into an HTML paragraph, and make the youtube link on the
+  // "We hope this brightens your day!" line into a hyperlink on the word "this"
+  const lines = bodyText.split('\n').map(line => line.trim()).filter(l => l.length > 0);
+  const htmlLines = lines.map(line => {
+    // Replace the word "this" in the brightens-your-day line with a hyperlink
+    if (line.includes('We hope this brightens your day')) {
+      line = line.replace(
+        'We hope this brightens your day',
+        `We hope <a href="${songUrl}" style="color:#c0392b;">this</a> brightens your day`
+      );
+    }
+    // Make the downtownwomenscenter URL a clickable link if present
+    if (line.includes('https://downtownwomenscenter.org/')) {
+      line = line.replace(
+        'https://downtownwomenscenter.org/',
+        '<a href="https://downtownwomenscenter.org/" style="color:#c0392b;">https://downtownwomenscenter.org/</a>'
+      );
+    }
+    return `<p style="margin:0 0 12px 0;">${line}</p>`;
+  });
+
+  // Banner: use image URL if set, otherwise render a text-based header
+  const bannerUrl = state.config.bannerImageUrl || '';
+  let bannerHtml;
+  if (bannerUrl) {
+    bannerHtml = `<div style="text-align:center;margin-bottom:28px;">
+      <img src="${bannerUrl}" alt="Medleys A Cappella Presents Love Notes" style="max-width:100%;height:auto;" />
+    </div>`;
+  } else {
+    bannerHtml = `<div style="background:#fff;text-align:center;padding:24px 20px 16px;border-bottom:2px solid #f0d0d0;margin-bottom:28px;">
+      <div style="font-family:'Arial Black',sans-serif;font-size:12px;font-weight:900;letter-spacing:3px;color:#c0392b;text-transform:uppercase;margin-bottom:4px;">MEDLEYS A CAPPELLA PRESENTS</div>
+      <div style="font-family:'Arial Black',sans-serif;font-size:38px;font-weight:900;color:#c0392b;text-transform:uppercase;letter-spacing:4px;line-height:1;">LOVE NOTES</div>
+    </div>`;
+  }
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="font-family:Georgia,serif;font-size:16px;line-height:1.7;color:#222;max-width:640px;margin:0 auto;padding:20px;">
+${bannerHtml}
+${htmlLines.join('\n')}
+</body></html>`;
 }
 
 // ============================================================
@@ -2096,13 +2177,16 @@ async function createGmailDraft(orderId) {
 
   try {
     const to      = order.virtualEmail.trim();
-    const subject = 'Your Love Note from Medleys A Cappella 💌';
+    const subject = state.config.emailSubject || DEFAULT_EMAIL_SUBJECT;
     const body    = buildEmailBody(order);
 
     if (!to || !to.includes('@')) throw new Error('No valid recipient email address for this order.');
 
     const rawEmail = buildMimeMessage(to, subject, body);
-    const encoded  = btoa(unescape(encodeURIComponent(rawEmail)))
+    // The raw message must be base64url-encoded for the Gmail API.
+    // Since buildMimeMessage already base64-encodes the body, we encode the
+    // full raw string (headers + base64 body) as base64url here.
+    const encoded = btoa(unescape(encodeURIComponent(rawEmail)))
       .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 
     const resp = await fetch('https://www.googleapis.com/gmail/v1/users/me/drafts', {
@@ -2131,13 +2215,16 @@ async function createGmailDraft(orderId) {
 }
 
 function buildMimeMessage(to, subject, htmlBody) {
+  // Base64-encode the HTML body separately (avoids UTF-8/emoji corruption)
+  const bodyB64 = btoa(unescape(encodeURIComponent(htmlBody)));
   return [
     `To: ${to}`,
     `Subject: ${subject}`,
     'MIME-Version: 1.0',
     'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: base64',
     '',
-    htmlBody,
+    bodyB64,
   ].join('\r\n');
 }
 
@@ -2211,6 +2298,13 @@ document.addEventListener('DOMContentLoaded', () => {
   loadConfig();
   initTabs();
   populateSetupUI();
+
+  // Banner preview — update live as user types
+  const bannerInput = document.getElementById('bannerImageUrl');
+  if (bannerInput) {
+    bannerInput.addEventListener('input', updateBannerPreview);
+    updateBannerPreview();
+  }
 
   // Set default matrix dates
   document.getElementById('matrixStartDate').value = '2026-02-09';
