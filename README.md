@@ -8,8 +8,8 @@ This tool automates the behind-the-scenes work for **Love Notes**, Medleys A Cap
 ## Table of Contents
 
 1. [What This Tool Does](#what-this-tool-does)
-2. [What You Need Before Starting (You don't need to read this section other than for trouble shooting)](#what-you-need-before-starting)
-3. [One-Time Setup (You don't need to read this section other than for trouble shooting)](#one-time-setup)
+2. [What You Need Before Starting](#what-you-need-before-starting)
+3. [One-Time Setup (Do This Once, At The Start)](#one-time-setup)
    - [Step A: Put the Tool on GitHub Pages](#step-a-put-the-tool-on-github-pages)
    - [Step B: Google Cloud Project Setup](#step-b-google-cloud-project-setup)
    - [Step C: Configure the Tool](#step-c-configure-the-tool)
@@ -20,7 +20,8 @@ This tool automates the behind-the-scenes work for **Love Notes**, Medleys A Cap
    - [Each Night: Review and Export](#each-night-review-and-export)
 6. [File Formats Reference](#file-formats-reference)
 7. [Troubleshooting](#troubleshooting)
-8. [Passing This On to the Next Manager](#passing-this-on-to-the-next-manager)
+8. [Changing the Form Format](#changing-the-form-format)
+9. [Passing This On to the Next Manager](#passing-this-on-to-the-next-manager)
 
 ---
 
@@ -89,7 +90,7 @@ GitHub Pages lets you host a website for free using a GitHub repository. The too
 - Under "Source," click the dropdown that says **"None"** and change it to **"main"**
 - Leave the folder set to **"/ (root)"**
 - Click **"Save"**
-- Wait 1–2 minutes, then refresh the page. You'll see a box that says: **"Your site is live at https://YOUR-USERNAME.github.io/Love-Notes-Automation-Tool/"**
+- Wait 1–2 minutes, then refresh the page. You'll see a box that says: **"Your site is live at https://YOUR-USERNAME.github.io/love-notes-automation-tool/"**
 
 **6. Bookmark that URL** — that's your Love Notes Automation Tool. Share it only with future Love Notes managers.
 
@@ -195,7 +196,7 @@ This generates the identifier that goes into the tool.
 
 #### Part 5 — Enter the Client ID in the Tool
 
-1. Open your Love Notes Automation Tool at `https://YOUR-USERNAME.github.io/Love-Notes-Automation-Tool/`
+1. Open your Love Notes Automation Tool at `https://YOUR-USERNAME.github.io/love-notes-automation-tool/`
 2. Go to the **⚙️ Setup & Config** tab
 3. Paste your Client ID into the **"OAuth Client ID"** field
 4. Click **"💾 Save Client ID"**
@@ -211,9 +212,10 @@ Once you've completed Steps A and B, do an initial configuration save:
 1. Open the tool and go to **⚙️ Setup & Config**
 2. Review the **Member Roster** — all 2025–26 members are pre-loaded. Update as needed.
 3. Review the **Song → YouTube URL Mapping** — pre-loaded from your 2026 VLN URL Bank. Update as needed.
-4. Check the **Column Mapping** — matches the 2025–26 Google Form. Only change these if the form structure changed.
-5. Review the **Output Templates** — these match the formats used in 2025–26. Edit if you want different wording.
-6. Click **"💾 Save"** on each section, or use any of the save buttons (they all save everything at once)
+4. Review the **Fundraiser Days** table — pre-loaded with the 2025–26 dates (Mon 2/9 – Sat 2/14). Each row is one performance day and contains the date, the responses spreadsheet column number for that day's time slot, performance start/end hours, and the Slack announcement intro line. Update dates and any other details to match the current year.
+5. Check the **Order Form Column Mapping** — matches the 2025–26 Google Form. Only change these if non-day-related questions changed (see [Changing the Form Format](#changing-the-form-format)).
+6. Review the **Output Templates** — these match the formats used in 2025–26. Edit if you want different wording.
+7. Click **💾 Save** on each section, or use any of the save buttons (they all save everything at once)
 
 Everything saves to your browser's local storage and persists between sessions.
 
@@ -239,9 +241,15 @@ At the start of each new Love Notes cycle, do the following before anything else
 - OR: update your VLN URL Bank spreadsheet and upload it to auto-fill the table
 - Click **💾 Save Songs**
 
-**3. Update Fundraiser Dates**
-- Go to **📊 Availability Matrix** tab
-- Update the **Fundraiser Start Date** and **Fundraiser End Date** to this year's dates
+**3. Update the Fundraiser Days table**
+- Go to **⚙️ Setup & Config → Fundraiser Days**
+- This is the most important annual update — everything else in the tool flows from it
+- For each row, update the **Date** to the correct calendar date for this year
+- Add or remove rows if the number of days changed (e.g., 5 days instead of 6, or starting on Tuesday instead of Monday)
+- Adjust **Start Hour** and **End Hour** per day if needed (e.g., Saturday might have a longer window)
+- Update the **Responses Column #** for each day if your Google Form column order changed
+- Edit the **Slack Intro Line** if you want to change the opening message for any day
+- Click **💾 Save Days** — the day tabs in Order Dashboard and Export update automatically
 
 **4. Add New Managers as Google Cloud Test Users**
 - Go to [console.cloud.google.com](https://console.cloud.google.com) → APIs & Services → OAuth consent screen
@@ -251,7 +259,7 @@ At the start of each new Love Notes cycle, do the following before anything else
 **5. Reuse the Same Google Form (Recommended)**
 - The column mapping in the tool is configured for the 2025–26 form
 - The easiest option is to duplicate that form and update the time slot options each year
-- If you make significant changes (different questions, different order), update the Column Mapping in Setup accordingly — see [Changing the Form Format](#changing-the-form-format)
+- If you add or reorder questions, update the **Order Form Column Mapping** in Setup (the non-day fields) and update the **Responses Column #** in each Fundraiser Days row — see [Changing the Form Format](#changing-the-form-format)
 
 ---
 
@@ -264,16 +272,17 @@ At the start of each new Love Notes cycle, do the following before anything else
 
 **Steps:**
 1. Create your When2Meet poll as usual, covering each day of Love Notes week in 15-minute increments
-2. Once all members have filled it out, go to your When2Meet and add a "&csv" at the end of the URL (this downloads the csv file).
-3. Open the tool and go to **📊 Availability Matrix**
-4. Upload the CSV file
-5. The tool will show you which members it found and flag any names that don't match your roster
+2. Once all members have filled it out, go to your When2Meet and click **"Export to CSV"** (on the results page)
+3. Make sure your **Fundraiser Days** table in Setup is up to date with this year's dates and hours before generating
+4. Open the tool and go to **📊 Availability Matrix**
+5. Upload the CSV file
+6. The tool will show you which members it found and flag any names that don't match your roster
    - If names are flagged, go to Setup → Member Roster and fix the "When2Meet Name" column to match exactly
-6. Set the **Fundraiser Start Date** and **End Date**
-7. Click **"📊 Generate Availability Matrix"**
-8. A completed Excel file downloads automatically — open it to review
-9. The time slot header cells are already color-coded: 🟢 green (can perform with beatboxer), 🟡 yellow (can perform, no beatboxer), 🔴 red (cannot perform)
-10. Review the matrix, make any manual corrections if needed, and use it to set up your Google Form time slot options
+7. Step 2 will display a summary of the fundraiser days and per-day hours pulled from your Setup config — verify these look correct
+8. Click **"📊 Generate Availability Matrix"**
+9. A completed Excel file downloads automatically — open it to review. Each day gets its own sheet with its specific hour range.
+10. The time slot header cells are already color-coded: 🟢 green (can perform with beatboxer), 🟡 yellow (can perform, no beatboxer), 🔴 red (cannot perform)
+11. Review the matrix, make any manual corrections if needed, and use it to set up your Google Form time slot options
 
 ---
 
@@ -323,7 +332,7 @@ Do this the night before each performance day, ideally around 9pm.
 ## File Formats Reference
 
 ### When2Meet CSV
-- Export directly from When2Meet page by adding "&csv" at the end of the URL (this downloads the csv file)
+- Export directly from When2Meet's results page using "Export to CSV"
 - First row is headers (blank cell, then one column per 15-minute time slot)
 - Each subsequent row is one member (their name in the first column, "Yes"/"No" in each time slot)
 - **The name in the first column must match the "When2Meet Name" in the Member Roster exactly** (case-insensitive)
@@ -375,213 +384,41 @@ The tool uses your browser's local storage. Make sure you're not in private/inco
 
 ## Changing the Form Format
 
-If you change the Google Form significantly (different questions, different order, new questions added), the column mapping will need to be updated.
+If you change the Google Form significantly (different questions, different order, new questions added), two things may need updating.
 
-**To find the new column numbers:**
+**For non-day fields** (sender name, recipient name, location, song, contact, etc.):
 1. Download the responses spreadsheet as .xlsx
 2. Open it in Google Sheets or Excel
-3. Look at the header row — count from the left, starting at 0
-   - Column A = 0, Column B = 1, Column C = 2, etc.
-4. Find which column number corresponds to each field
-5. Go to **Setup → Order Form Column Mapping** and update the numbers
+3. Look at the header row — count from the left, starting at 0 (Column A = 0, Column B = 1, etc.)
+4. Find which column number now corresponds to each field
+5. Go to **⚙️ Setup & Config → Order Form Column Mapping** and update the numbers
 6. Click **💾 Save**
+
+**For day-specific time slot columns** (i.e., the column that holds "what time?" for Monday, Tuesday, etc.):
+- These are configured per-day in the **Fundraiser Days** table, not in the Column Mapping section
+- Each row in the Fundraiser Days table has a **Responses Column #** field — update that number for any day whose column position changed
 
 ---
 
 ## Changing Which Days the Tool Recognizes
 
-> **When to do this:** Every year the days of Love Notes week may shift. For example, this year it ran Monday–Saturday; next year it might run Tuesday–Sunday, or only last 4 days. This section explains exactly what to edit in the HTML file to add days, remove days, or change which days of the week the tool looks for.
+Every year the fundraiser days may shift — it might run Tuesday to Sunday instead of Monday to Saturday, or last only 4 days instead of 6. **All of this is now handled entirely through the Setup tab — no code editing required.**
 
-### How to Edit the HTML File
+Go to **⚙️ Setup & Config → Fundraiser Days** and use the table:
 
-The tool is a single file called `index.html` in your GitHub repository. To edit it:
+**To add a day** (e.g., add Sunday): click **+ Add Day**, select the weekday, fill in the date, column number, hours, and Slack intro line, then save. The day tabs in Order Dashboard and Export update automatically.
 
-1. Go to your GitHub repository
-2. Click on `index.html`
-3. Click the **pencil icon** (✏️ Edit this file) in the top right
-4. Make your changes following the instructions below
-5. When done, scroll to the bottom, type a short description like "Updated days for 2027", and click **"Commit changes"**
+**To remove a day** (e.g., remove Monday): click the ✕ button on that row, then save.
 
-The tool will update automatically within a minute or two.
+**To shift which days of the week** (e.g., change from Mon–Sat to Tue–Sun): remove the Monday row, add a Sunday row, update dates on all remaining rows, and save.
 
-> **Tip:** Use your browser's Find function (Ctrl+F or Cmd+F) to locate the exact text you need to change. The section names below are the exact labels to search for.
+**To change a date** (e.g., this year's Friday falls on 2/12 instead of 2/13): click the date field for that row, update it, and save.
 
----
+**To adjust performance hours for a specific day** (e.g., Saturday starts at 8 AM but ends at 10 PM): update the Start Hour and End Hour fields for that row. Hours are in 24-hour format (8 = 8 AM, 22 = 10 PM).
 
-### The Six Places You Need to Change
+**To update a Slack intro line**: edit the text in the Slack Intro column for that day and save.
 
-When you add, remove, or change a day, you must update **all six** of the following locations in the HTML file. They are listed in the order they appear in the file.
-
----
-
-#### Location 1 — Column Mapping defaults (`DEFAULT_COL_MAP`)
-
-Search for: `DEFAULT_COL_MAP`
-
-This section maps each day to its column number in the Google Form responses spreadsheet. It looks like this:
-
-```javascript
-const DEFAULT_COL_MAP = {
-  ...
-  timeMon: 9,
-  timeTue: 10,
-  timeWed: 11,
-  timeThu: 12,
-  timeFri: 13,
-  timeSat: 14,
-  ...
-};
-```
-
-**What to change:**
-- Each `time___` entry corresponds to one day's time slot column in the spreadsheet
-- The number after the colon (9, 10, 11, etc.) is the column index — count from 0 in your spreadsheet's header row
-- **To add a day** (e.g., Sunday): add a new line like `timeSun: 15,` with the correct column index
-- **To remove a day** (e.g., remove Monday): delete the `timeMon: 9,` line
-- **To change a day** (e.g., change Monday to Tuesday as the first day): rename `timeMon` to `timeTue` and update its column number
-
-The short three-letter codes used here (`Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, `Sun`) are called **day keys**. Use these exact codes — they connect all six locations together.
-
----
-
-#### Location 2 — Order Dashboard filter buttons
-
-Search for: `id="orderDayFilter"`
-
-This is the row of buttons at the top of the Order Dashboard that lets you filter orders by day. It looks like this:
-
-```html
-<div class="day-tabs" id="orderDayFilter">
-  <button class="day-tab-btn active" data-filter="all" onclick="filterOrders('all',this)">All</button>
-  <button class="day-tab-btn" data-filter="Mon" onclick="filterOrders('Mon',this)">Mon 2/9</button>
-  <button class="day-tab-btn" data-filter="Tue" onclick="filterOrders('Tue',this)">Tue 2/10</button>
-  <button class="day-tab-btn" data-filter="Wed" onclick="filterOrders('Wed',this)">Wed 2/11</button>
-  <button class="day-tab-btn" data-filter="Thu" onclick="filterOrders('Thu',this)">Thu 2/12</button>
-  <button class="day-tab-btn" data-filter="Fri" onclick="filterOrders('Fri',this)">Fri 2/13</button>
-  <button class="day-tab-btn" data-filter="Sat" onclick="filterOrders('Sat',this)">Sat 2/14</button>
-  <button class="day-tab-btn" data-filter="Virtual" onclick="filterOrders('Virtual',this)">💻 Virtual</button>
-</div>
-```
-
-**What to change:**
-- **To add a day** (e.g., Sunday Feb 15): copy any existing button line and paste it. Change `data-filter="Sun"`, the `onclick` text to `'Sun'`, and the button label to `Sun 2/15`
-- **To remove a day**: delete its button line entirely
-- **To change a date label**: update the text between `>` and `</button>` (e.g., change `Mon 2/9` to `Mon 2/8`)
-- Keep the `Virtual` button — do not remove it
-
----
-
-#### Location 3 — Export tab day buttons
-
-Search for: `id="exportDayTabs"`
-
-This is the row of buttons in the Review & Export tab. It looks almost identical to Location 2:
-
-```html
-<div class="day-tabs" id="exportDayTabs">
-  <button class="day-tab-btn active" data-day="Mon" onclick="showExportDay('Mon',this)">Mon 2/9</button>
-  <button class="day-tab-btn" data-day="Tue" onclick="showExportDay('Tue',this)">Tue 2/10</button>
-  ...
-  <button class="day-tab-btn" data-day="Virtual" onclick="showExportDay('Virtual',this)">💻 Virtual</button>
-</div>
-```
-
-**What to change:** Same rules as Location 2, but the attribute is `data-day=` instead of `data-filter=`, and the `onclick` says `showExportDay` instead of `filterOrders`. Add, remove, or update buttons to match what you did in Location 2.
-
----
-
-#### Location 4 — Day-to-column mapping in the order parser (`dayTimeCols`)
-
-Search for: `dayTimeCols`
-
-This is inside the `parseOrders` function and tells the parser which spreadsheet column to look at for each day's time slot. It looks like this:
-
-```javascript
-const dayTimeCols = {
-  Mon: cm.timeMon,
-  Tue: cm.timeTue,
-  Wed: cm.timeWed,
-  Thu: cm.timeThu,
-  Fri: cm.timeFri,
-  Sat: cm.timeSat
-};
-```
-
-**What to change:**
-- **To add a day** (e.g., Sunday): add `Sun: cm.timeSun,` on a new line (the `cm.timeSun` refers to the value you set in Location 1)
-- **To remove a day**: delete its line
-- The day keys here must exactly match what you used in Locations 1, 2, and 3
-
----
-
-#### Location 5 — Slack announcement intro lines (`slackIntros`)
-
-Search for: `slackIntros`
-
-This object contains the opening line of the Slack announcement for each day. It looks like this:
-
-```javascript
-const slackIntros = {
-  Mon: '@channel Hi guys tomorrow is the FIRST DAY OF LOVE NOTES WEEK OH YEAHHHH. Ok here\'s the schedule:',
-  Tue: '@channel Hi guys tomorrow is the SECOND DAY OF LOVE NOTES WEEK LETS GOOOOOOOOOO. Ok here is the schedule:',
-  Wed: '@channel Hi guys tomorrow is the THIRD DAY OF LOVE NOTES WEEK LETS GOOOOOOOOOO. Ok here da schedule:',
-  Thu: '@channel Hi guys tomorrow is the FOURTH DAY OF LOVE NOTES WEEK YEAHHHHHHHH OH YEAHHHHHHHH OH YEAHHHHHHH WAHHHHHHHH. Ok here\'s the schedule:',
-  Fri: '@channel Hi guys tomorrow is the FIFTH DAY OF LOVE NOTES WEEK YURRRRRRRRR. Ok schedule:',
-  Sat: '@channel Hi guys tomorrow is the SIXTH DAY OF LOVE NOTES WEEK YUUUUUUUUH. Ok schedule:',
-};
-```
-
-**What to change:**
-- **To add a day**: add a new line like `Sun: '@channel Hi guys tomorrow is the SEVENTH DAY...',`
-- **To remove a day**: delete its line
-- **To change the wording**: edit the text between the single quotes — go wild, this is the fun part
-- Note: the `\'` inside the text is just how you write an apostrophe inside JavaScript single-quoted strings — keep it as-is
-
----
-
-#### Location 6 — Day-to-date mapping for Google Calendar (`dates` inside `buildEventDateTime`)
-
-Search for: `buildEventDateTime`
-
-This function converts a day key + time slot into an actual calendar date and time. Inside it there is a `dates` object like this:
-
-```javascript
-const dates = {
-  Mon: '2026-02-09',
-  Tue: '2026-02-10',
-  Wed: '2026-02-11',
-  Thu: '2026-02-12',
-  Fri: '2026-02-13',
-  Sat: '2026-02-14'
-};
-```
-
-**What to change:**
-- **Every year**, update all six date strings to match the actual calendar dates of Love Notes week
-- **To add a day** (e.g., Sunday): add `Sun: '2026-02-15',`
-- **To remove a day**: delete its line
-- Dates must be in `YYYY-MM-DD` format (year-month-day, zero-padded)
-
----
-
-### Complete Example: Changing from Mon–Sat to Tue–Sun
-
-Say next year Love Notes runs Tuesday February 9 through Sunday February 14. Here is exactly what you would change at each location:
-
-| Location | Remove | Add |
-|---|---|---|
-| 1. DEFAULT_COL_MAP | `timeMon: 9,` | `timeSun: 14,` (update all column numbers to match new form) |
-| 2. Order Dashboard buttons | Mon button | `<button class="day-tab-btn" data-filter="Sun" onclick="filterOrders('Sun',this)">Sun 2/14</button>` |
-| 3. Export tab buttons | Mon button | Same Sun button with `data-day="Sun"` and `showExportDay` |
-| 4. dayTimeCols | `Mon: cm.timeMon,` | `Sun: cm.timeSun,` |
-| 5. slackIntros | `Mon: '...',` | `Sun: '@channel Hi guys...',` |
-| 6. buildEventDateTime dates | `Mon: '2026-02-09',` | `Sun: '2027-02-14',` (and update all other dates) |
-
----
-
-### Complete Example: Shortening to 4 Days (e.g., Wed–Sat only)
-
-Remove `Mon`, `Tue` from all six locations. Everything else stays the same.
+After clicking **💾 Save Days**, the Order Dashboard filter tabs and Export day tabs immediately reflect your changes — no page refresh needed.
 
 ---
 
@@ -596,9 +433,9 @@ When you hand off Love Notes to the next manager, give them all of the following
 5. **The Google Form** — either transfer ownership or share it so they can duplicate it
 6. **The OAuth Client ID** — it's saved in the tool's Setup tab, but write it down separately as a backup
 
-> **Recommendation:** Keep the same GitHub repository and Google Cloud project from year to year. The only things that need updating annually are the Member Roster, Song URLs, and fundraiser dates — all of which are done through the tool's Setup tab without touching any code.
+> **Recommendation:** Keep the same GitHub repository and Google Cloud project from year to year. The only things that need updating annually are the Member Roster, Song URLs, and Fundraiser Days — all done through the tool's Setup tab without touching any code.
 
 ---
 
 *Built for Medleys A Cappella at UCLA. Fundraising for the LA Downtown Women's Center.*
-*Tool created 2026. Questions? Contact the Love Notes manager.*
+*Tool created 2026. Questions? Contact Max Liu.*
