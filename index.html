@@ -630,22 +630,38 @@ td input:focus, td select:focus { outline: none; border-color: var(--red); }
     </div>
   </div>
 
-  <!-- Matrix Config -->
+  <!-- Fundraiser Days -->
   <div class="section">
-    <h2>⏰ Performance Hours</h2>
-    <p class="section-desc">Set the earliest and latest performance time slots for the availability matrix.</p>
-    <div class="form-row">
-      <div class="form-group" style="max-width:180px;">
-        <label>Earliest slot start (24h)</label>
-        <input type="number" id="matrixStartHour" min="0" max="23" value="8" />
-      </div>
-      <div class="form-group" style="max-width:180px;">
-        <label>Latest slot end (24h)</label>
-        <input type="number" id="matrixEndHour" min="1" max="24" value="21" />
-      </div>
+    <h2>📅 Fundraiser Days</h2>
+    <p class="section-desc">
+      Configure each day of Love Notes week. Add one row per performance day, in order.
+      The <strong>Weekday</strong> must match the sheet name in your availability matrix exactly.
+      The <strong>Responses Column</strong> is the 0-indexed column in your Google Form responses spreadsheet that holds the time slot for that day.
+      <strong>Start/End Hour</strong> sets the performance window for that specific day (24-hour format — e.g. 8 = 8:00 AM, 21 = slots end by 9:00 PM).
+      The <strong>Slack Intro</strong> is the opening line of the Slack announcement sent the night before.
+    </p>
+    <div class="info-box">
+      💡 Update this table every year: change the dates, adjust start/end hours if needed, update column indices if your Google Form order changed, and edit the Slack intro lines to your liking.
     </div>
-    <div class="flex-row">
-      <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 Save</button>
+    <div class="tbl-wrap">
+      <table id="fundraiserDaysTable">
+        <thead>
+          <tr>
+            <th>Weekday</th>
+            <th>Date (YYYY-MM-DD)</th>
+            <th>Responses Column #</th>
+            <th>Start Hour (24h)</th>
+            <th>End Hour (24h)</th>
+            <th>Slack Intro Line</th>
+            <th>Remove</th>
+          </tr>
+        </thead>
+        <tbody id="fundraiserDaysTbody"></tbody>
+      </table>
+    </div>
+    <div class="flex-row mt-14">
+      <button class="btn btn-outline btn-sm" onclick="addFundraiserDayRow()">+ Add Day</button>
+      <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 Save Days</button>
     </div>
   </div>
 
@@ -673,22 +689,12 @@ td input:focus, td select:focus { outline: none; border-color: var(--red); }
   </div>
 
   <div class="section">
-    <h2>⚙️ Step 2 — Configure Matrix Options</h2>
-    <p class="section-desc">Set the fundraiser date range and confirm performance hours (set in Setup).</p>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Fundraiser Start Date</label>
-        <input type="date" id="matrixStartDate" />
-      </div>
-      <div class="form-group">
-        <label>Fundraiser End Date</label>
-        <input type="date" id="matrixEndDate" />
-      </div>
+    <h2>⚙️ Step 2 — Confirm Fundraiser Days</h2>
+    <p class="section-desc">The matrix will be generated for the days configured in Setup → Fundraiser Days. Each day gets its own sheet with its own performance hour range.</p>
+    <div id="matrixDaysSummary" class="info-box">
+      Loading days from config…
     </div>
-    <div class="info-box">
-      Performance hours: <strong id="matrixHoursLabel">8:00 AM – 9:00 PM</strong> (change in Setup tab).
-      Columns will use 30-minute slots across this range.
-    </div>
+    <p class="small">To change dates, hours, or which days are included, go to <strong>⚙️ Setup &amp; Config → Fundraiser Days</strong> and save your changes.</p>
   </div>
 
   <div class="section">
@@ -746,14 +752,7 @@ td input:focus, td select:focus { outline: none; border-color: var(--red); }
     <h2>📋 Orders</h2>
     <div class="flex-row mb-10">
       <div class="day-tabs" id="orderDayFilter">
-        <button class="day-tab-btn active" data-filter="all" onclick="filterOrders('all',this)">All</button>
-        <button class="day-tab-btn" data-filter="Mon" onclick="filterOrders('Mon',this)">Mon 2/9</button>
-        <button class="day-tab-btn" data-filter="Tue" onclick="filterOrders('Tue',this)">Tue 2/10</button>
-        <button class="day-tab-btn" data-filter="Wed" onclick="filterOrders('Wed',this)">Wed 2/11</button>
-        <button class="day-tab-btn" data-filter="Thu" onclick="filterOrders('Thu',this)">Thu 2/12</button>
-        <button class="day-tab-btn" data-filter="Fri" onclick="filterOrders('Fri',this)">Fri 2/13</button>
-        <button class="day-tab-btn" data-filter="Sat" onclick="filterOrders('Sat',this)">Sat 2/14</button>
-        <button class="day-tab-btn" data-filter="Virtual" onclick="filterOrders('Virtual',this)">💻 Virtual</button>
+        <!-- Populated dynamically from Fundraiser Days config -->
       </div>
     </div>
     <div id="ordersList"></div>
@@ -776,13 +775,7 @@ td input:focus, td select:focus { outline: none; border-color: var(--red); }
       📋 <strong>Where are the confirmation messages?</strong> Expand any in-person order card below — each card contains three sections: the Slack entry, the <strong>Confirmation Message</strong> (copy and paste into iMessage the morning of the performance), and the Google Calendar event button.
     </div>
     <div class="day-tabs" id="exportDayTabs">
-      <button class="day-tab-btn active" data-day="Mon" onclick="showExportDay('Mon',this)">Mon 2/9</button>
-      <button class="day-tab-btn" data-day="Tue" onclick="showExportDay('Tue',this)">Tue 2/10</button>
-      <button class="day-tab-btn" data-day="Wed" onclick="showExportDay('Wed',this)">Wed 2/11</button>
-      <button class="day-tab-btn" data-day="Thu" onclick="showExportDay('Thu',this)">Thu 2/12</button>
-      <button class="day-tab-btn" data-day="Fri" onclick="showExportDay('Fri',this)">Fri 2/13</button>
-      <button class="day-tab-btn" data-day="Sat" onclick="showExportDay('Sat',this)">Sat 2/14</button>
-      <button class="day-tab-btn" data-day="Virtual" onclick="showExportDay('Virtual',this)">💻 Virtual</button>
+      <!-- Populated dynamically from Fundraiser Days config -->
     </div>
 
     <!-- Slack Announcement Block -->
@@ -866,12 +859,6 @@ const DEFAULT_COL_MAP = {
   song:              6,
   specialInstructions: 7,
   heardFrom:         8,
-  timeMon:           9,
-  timeTue:           10,
-  timeWed:           11,
-  timeThu:           12,
-  timeFri:           13,
-  timeSat:           14,
   virtualEmail:      15,
   contact:           16,
   paymentConfirm:    17,
@@ -889,14 +876,49 @@ const COL_MAP_LABELS = {
   specialInstructions: "Special Instructions column",
   contact:             "Contact / phone column",
   virtualEmail:        "Virtual love note recipient email column",
-  timeMon:             "Monday time slot column",
-  timeTue:             "Tuesday time slot column",
-  timeWed:             "Wednesday time slot column",
-  timeThu:             "Thursday time slot column",
-  timeFri:             "Friday time slot column",
-  timeSat:             "Saturday time slot column",
   dataStart:           "Header row index (usually 1 if row 0 is instructions)",
 };
+
+// Default fundraiser days — one entry per performance day.
+// key:        3-letter code used throughout the tool (Mon/Tue/Wed/Thu/Fri/Sat/Sun)
+// weekday:    Full weekday name — must match the availability matrix sheet name exactly
+// date:       Calendar date in YYYY-MM-DD format
+// colIndex:   Column index (0-based) in the responses spreadsheet for this day's time slot
+// startHour:  Earliest performance slot start time (24-hour, e.g. 8 = 8:00 AM)
+// endHour:    Latest performance slot end time (24-hour, e.g. 21 = slots end by 9:00 PM)
+// slackIntro: Opening line of the Slack announcement sent the night before this day
+const DEFAULT_FUNDRAISER_DAYS = [
+  {
+    key: 'Mon', weekday: 'Monday', date: '2026-02-09', colIndex: 9,
+    startHour: 8, endHour: 21,
+    slackIntro: "@channel Hi guys tomorrow is the FIRST DAY OF LOVE NOTES WEEK OH YEAHHHH. Ok here's the schedule:",
+  },
+  {
+    key: 'Tue', weekday: 'Tuesday', date: '2026-02-10', colIndex: 10,
+    startHour: 8, endHour: 21,
+    slackIntro: "@channel Hi guys tomorrow is the SECOND DAY OF LOVE NOTES WEEK LETS GOOOOOOOOOO. Ok here is the schedule:",
+  },
+  {
+    key: 'Wed', weekday: 'Wednesday', date: '2026-02-11', colIndex: 11,
+    startHour: 8, endHour: 21,
+    slackIntro: "@channel Hi guys tomorrow is the THIRD DAY OF LOVE NOTES WEEK LETS GOOOOOOOOOO. Ok here da schedule:",
+  },
+  {
+    key: 'Thu', weekday: 'Thursday', date: '2026-02-12', colIndex: 12,
+    startHour: 8, endHour: 21,
+    slackIntro: "@channel Hi guys tomorrow is the FOURTH DAY OF LOVE NOTES WEEK YEAHHHHHHHH OH YEAHHHHHHHH OH YEAHHHHHHH WAHHHHHHHH. Ok here's the schedule:",
+  },
+  {
+    key: 'Fri', weekday: 'Friday', date: '2026-02-13', colIndex: 13,
+    startHour: 8, endHour: 21,
+    slackIntro: "@channel Hi guys tomorrow is the FIFTH DAY OF LOVE NOTES WEEK YURRRRRRRRR. Ok schedule:",
+  },
+  {
+    key: 'Sat', weekday: 'Saturday', date: '2026-02-14', colIndex: 14,
+    startHour: 8, endHour: 21,
+    slackIntro: "@channel Hi guys tomorrow is the SIXTH DAY OF LOVE NOTES WEEK YUUUUUUUUH. Ok schedule:",
+  },
+];
 
 const DEFAULT_TMPL_SLACK = `~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Time: {{time}}
@@ -961,11 +983,10 @@ function defaultConfig() {
     members: JSON.parse(JSON.stringify(DEFAULT_MEMBERS)),
     songs: JSON.parse(JSON.stringify(DEFAULT_SONGS)),
     colMap: JSON.parse(JSON.stringify(DEFAULT_COL_MAP)),
+    fundraiserDays: JSON.parse(JSON.stringify(DEFAULT_FUNDRAISER_DAYS)),
     tmplSlack: DEFAULT_TMPL_SLACK,
     tmplConfirm: DEFAULT_TMPL_CONFIRM,
     tmplEmail: DEFAULT_TMPL_EMAIL,
-    matrixStartHour: 8,
-    matrixEndHour: 21,
   };
 }
 
@@ -988,8 +1009,6 @@ function saveConfig() {
   state.config.clientId        = document.getElementById('clientId').value.trim();
   state.config.bannerImageUrl  = document.getElementById('bannerImageUrl').value.trim();
   state.config.emailSubject    = document.getElementById('emailSubject').value.trim() || DEFAULT_EMAIL_SUBJECT;
-  state.config.matrixStartHour = parseInt(document.getElementById('matrixStartHour').value) || 8;
-  state.config.matrixEndHour   = parseInt(document.getElementById('matrixEndHour').value)   || 21;
   state.config.tmplSlack   = document.getElementById('tmplSlack').value;
   state.config.tmplConfirm = document.getElementById('tmplConfirm').value;
   state.config.tmplEmail   = document.getElementById('tmplEmail').value;
@@ -1018,14 +1037,35 @@ function saveConfig() {
     }
   });
 
-  // Column mapping
+  // Column mapping (non-day fields only)
   for (const key of Object.keys(DEFAULT_COL_MAP)) {
     const el = document.getElementById('colMap_' + key);
     if (el) state.config.colMap[key] = parseInt(el.value) || 0;
   }
 
+  // Fundraiser days
+  state.config.fundraiserDays = [];
+  document.querySelectorAll('#fundraiserDaysTbody tr').forEach(tr => {
+    const selects = tr.querySelectorAll('select');
+    const inputs  = tr.querySelectorAll('input');
+    const textareas = tr.querySelectorAll('textarea');
+    if (selects.length >= 1 && inputs.length >= 4) {
+      const weekday = selects[0].value;
+      const keyMap  = {Monday:'Mon',Tuesday:'Tue',Wednesday:'Wed',Thursday:'Thu',Friday:'Fri',Saturday:'Sat',Sunday:'Sun'};
+      state.config.fundraiserDays.push({
+        key:        keyMap[weekday] || weekday.slice(0,3),
+        weekday:    weekday,
+        date:       inputs[0].value.trim(),
+        colIndex:   parseInt(inputs[1].value) || 0,
+        startHour:  parseInt(inputs[2].value) || 8,
+        endHour:    parseInt(inputs[3].value) || 21,
+        slackIntro: textareas.length ? textareas[0].value : '',
+      });
+    }
+  });
+
   localStorage.setItem('lnm_config', JSON.stringify(state.config));
-  updateMatrixHoursLabel();
+  rebuildDayTabs();
   toast('✅ Configuration saved!');
 }
 
@@ -1043,15 +1083,13 @@ function populateSetupUI() {
   document.getElementById('clientId').value      = c.clientId || '';
   document.getElementById('bannerImageUrl').value = c.bannerImageUrl || '';
   document.getElementById('emailSubject').value   = c.emailSubject || DEFAULT_EMAIL_SUBJECT;
-  document.getElementById('matrixStartHour').value = c.matrixStartHour;
-  document.getElementById('matrixEndHour').value   = c.matrixEndHour;
   document.getElementById('tmplSlack').value   = c.tmplSlack;
   document.getElementById('tmplConfirm').value = c.tmplConfirm;
   document.getElementById('tmplEmail').value   = c.tmplEmail;
   populateMemberTable();
   populateSongUrlTable();
   populateColMapForm();
-  updateMatrixHoursLabel();
+  populateFundraiserDaysTable();
 }
 
 function populateMemberTable() {
@@ -1112,20 +1150,64 @@ function populateColMapForm() {
   container.innerHTML = html;
 }
 
-function updateMatrixHoursLabel() {
-  const s = state.config.matrixStartHour;
-  const e = state.config.matrixEndHour;
-  const fmt = h => h === 12 ? '12:00 PM' : h < 12 ? `${h}:00 AM` : `${h-12}:00 PM`;
-  const el = document.getElementById('matrixHoursLabel');
-  if (el) el.textContent = `${fmt(s)} – ${fmt(e)}`;
-}
-
 function resetTemplates() {
   document.getElementById('tmplSlack').value   = DEFAULT_TMPL_SLACK;
   document.getElementById('tmplConfirm').value = DEFAULT_TMPL_CONFIRM;
   document.getElementById('tmplEmail').value   = DEFAULT_TMPL_EMAIL;
   document.getElementById('emailSubject').value = DEFAULT_EMAIL_SUBJECT;
   toast('Templates reset to defaults. Click Save to keep.');
+}
+
+// ============================================================
+// FUNDRAISER DAYS TABLE
+// ============================================================
+function populateFundraiserDaysTable() {
+  const tbody = document.getElementById('fundraiserDaysTbody');
+  tbody.innerHTML = '';
+  const days = state.config.fundraiserDays || DEFAULT_FUNDRAISER_DAYS;
+  for (const d of days) addFundraiserDayRow(d);
+}
+
+function addFundraiserDayRow(d={}) {
+  const tbody = document.getElementById('fundraiserDaysTbody');
+  const tr = document.createElement('tr');
+  const weekdays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const opts = weekdays.map(w => `<option value="${w}" ${d.weekday===w?'selected':''}>${w}</option>`).join('');
+  tr.innerHTML = `
+    <td><select style="width:100%">${opts}</select></td>
+    <td><input type="date" value="${esc(d.date||'')}" style="width:120px" /></td>
+    <td><input type="number" value="${d.colIndex??''}" min="0" style="width:60px" /></td>
+    <td><input type="number" value="${d.startHour??8}" min="0" max="23" style="width:55px" /></td>
+    <td><input type="number" value="${d.endHour??21}" min="1" max="24" style="width:55px" /></td>
+    <td><textarea rows="2" style="width:100%;min-width:220px;font-size:0.78rem;resize:vertical">${esc(d.slackIntro||'')}</textarea></td>
+    <td><button class="btn btn-danger btn-xs" onclick="this.closest('tr').remove()">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+// Rebuild the day-tab buttons in Order Dashboard and Export tab from current config
+function rebuildDayTabs() {
+  const days = state.config.fundraiserDays || [];
+
+  // Order Dashboard filter tabs
+  const filterContainer = document.getElementById('orderDayFilter');
+  filterContainer.innerHTML = `<button class="day-tab-btn active" data-filter="all" onclick="filterOrders('all',this)">All</button>`;
+  for (const d of days) {
+    const label = `${d.weekday.slice(0,3)} ${d.date ? d.date.slice(5).replace('-','/') : ''}`;
+    filterContainer.innerHTML += `<button class="day-tab-btn" data-filter="${d.key}" onclick="filterOrders('${d.key}',this)">${label}</button>`;
+  }
+  filterContainer.innerHTML += `<button class="day-tab-btn" data-filter="Virtual" onclick="filterOrders('Virtual',this)">💻 Virtual</button>`;
+
+  // Export tab day tabs
+  const exportContainer = document.getElementById('exportDayTabs');
+  exportContainer.innerHTML = '';
+  let first = true;
+  for (const d of days) {
+    const label = `${d.weekday.slice(0,3)} ${d.date ? d.date.slice(5).replace('-','/') : ''}`;
+    exportContainer.innerHTML += `<button class="day-tab-btn ${first?'active':''}" data-day="${d.key}" onclick="showExportDay('${d.key}',this)">${label}</button>`;
+    first = false;
+  }
+  exportContainer.innerHTML += `<button class="day-tab-btn" data-day="Virtual" onclick="showExportDay('Virtual',this)">💻 Virtual</button>`;
 }
 
 function updateBannerPreview() {
@@ -1320,26 +1402,23 @@ async function generateMatrix() {
   const statusEl = document.getElementById('matrixStatus');
   if (!state.w2mData) { toast('⚠️ Please upload When2Meet CSV first.'); return; }
 
-  const startHour = state.config.matrixStartHour;
-  const endHour   = state.config.matrixEndHour;
-
-  // Build 30-min time slots
-  const timeSlots = []; // [{label, startH, startM}]
-  for (let h = startHour; h < endHour; h++) {
-    timeSlots.push({label: fmtSlotLabel(h, 0),  startH: h, startM: 0 });
-    timeSlots.push({label: fmtSlotLabel(h, 30), startH: h, startM: 30});
+  const fundraiserDays = state.config.fundraiserDays || [];
+  if (!fundraiserDays.length) {
+    toast('⚠️ No fundraiser days configured. Go to Setup → Fundraiser Days.');
+    return;
   }
 
-  // Determine fundraiser days from UI or from w2m data
-  const startDateStr = document.getElementById('matrixStartDate').value;
-  const endDateStr   = document.getElementById('matrixEndDate').value;
-  const dayOrder = ['Mon','Tue','Wed','Thu','Fri','Sat'];
+  // Get day keys present in When2Meet data (excluding Sun unless configured)
+  const configuredKeys = new Set(fundraiserDays.map(d => d.key));
+  const dayKeysInData  = [...new Set(state.w2mData.slots.map(s => s.dayKey))];
+  const dayKeys = fundraiserDays
+    .filter(d => dayKeysInData.includes(d.key))
+    .map(d => d.key);
 
-  // Get unique days from When2Meet slots (excluding Sun)
-  const dayKeysInData = [...new Set(state.w2mData.slots.map(s => s.dayKey))].filter(d => d !== 'Sun');
-  const dayKeys = dayOrder.filter(d => dayKeysInData.includes(d));
-
-  const dayLabels = {Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday', Sat:'Saturday'};
+  if (!dayKeys.length) {
+    toast('⚠️ No When2Meet data matches the configured fundraiser days. Check day keys.');
+    return;
+  }
 
   try {
     btn.disabled = true;
@@ -1355,7 +1434,18 @@ async function generateMatrix() {
 
     // Build one sheet per day
     for (const dayKey of dayKeys) {
-      const sheetName = dayLabels[dayKey];
+      const dayConfig  = fundraiserDays.find(d => d.key === dayKey);
+      const startHour  = dayConfig.startHour;
+      const endHour    = dayConfig.endHour;
+      const sheetName  = dayConfig.weekday;
+
+      // Build 30-min time slots for THIS day's specific hours
+      const timeSlots = [];
+      for (let h = startHour; h < endHour; h++) {
+        timeSlots.push({label: fmtSlotLabel(h, 0),  startH: h, startM: 0 });
+        timeSlots.push({label: fmtSlotLabel(h, 30), startH: h, startM: 30});
+      }
+
       const ws = workbook.addWorksheet(sheetName);
 
       // Get the members in order: SOP, ALT, TEN, BASS
@@ -1367,8 +1457,7 @@ async function generateMatrix() {
       }
 
       // Compute availability per member per 30-min slot
-      // For each 30-min slot: both corresponding 15-min slots must be 'Yes'
-      const availability = {}; // memberW2MName -> slotIdx -> 0|1
+      const availability = {};
       for (const member of state.config.members) {
         availability[member.w2m] = {};
         const w2mMember = state.w2mData.members.find(
@@ -1377,7 +1466,6 @@ async function generateMatrix() {
         for (let si = 0; si < timeSlots.length; si++) {
           const slot = timeSlots[si];
           if (!w2mMember) { availability[member.w2m][si] = 0; continue; }
-          // Find the two 15-min slots
           const s1 = state.w2mData.slots.find(s => s.dayKey===dayKey && s.hour===slot.startH && s.minute===slot.startM);
           const s2 = state.w2mData.slots.find(s => s.dayKey===dayKey && s.hour===slot.startH && s.minute===slot.startM+15);
           const a1 = s1 ? w2mMember.slots[s1.colIdx] : false;
@@ -1387,11 +1475,9 @@ async function generateMatrix() {
       }
 
       // === Build spreadsheet rows ===
-      // Row 1: header
       const headerRow = ['', ...timeSlots.map(s => s.label)];
       ws.addRow(headerRow);
 
-      // Style header row
       const hRow = ws.getRow(1);
       hRow.getCell(1).font = {bold: true};
       for (let ci = 2; ci <= headerRow.length; ci++) {
@@ -1399,51 +1485,37 @@ async function generateMatrix() {
         hRow.getCell(ci).alignment = {horizontal:'center'};
       }
 
-      // Track row positions for formula references
-      const sumRows = {};      // partKey -> Excel row number
-      const beatboxerRows = []; // Excel row numbers of beatboxers
-
+      const sumRows = {};
+      const beatboxerRows = [];
       let excelRow = 2;
 
       for (const part of partOrder) {
         const partMembers = membersByPart[part];
         const partStartRow = excelRow;
-        const partMemberRows = [];
 
         for (const member of partMembers) {
           const rowData = [member.display];
-          for (let si = 0; si < timeSlots.length; si++) {
-            rowData.push(availability[member.w2m][si]);
-          }
+          for (let si = 0; si < timeSlots.length; si++) rowData.push(availability[member.w2m][si]);
           ws.addRow(rowData);
           ws.getRow(excelRow).getCell(1).font = {bold: false};
           if (member.vp) beatboxerRows.push(excelRow);
-          partMemberRows.push(excelRow);
           excelRow++;
         }
 
-        // Part sum row
-        const sumRowIdx = excelRow;
-        sumRows[part] = sumRowIdx;
+        sumRows[part] = excelRow;
         const sumRowData = [part + ' SUM'];
         for (let ci = 2; ci <= timeSlots.length + 1; ci++) {
           const col = colLetter(ci);
-          const formula = `SUM(${col}${partStartRow}:${col}${excelRow-1})`;
-          sumRowData.push({formula, result: 0});
+          sumRowData.push({formula: `SUM(${col}${partStartRow}:${col}${excelRow-1})`, result: 0});
         }
         ws.addRow(sumRowData);
-        const sumRow = ws.getRow(excelRow);
-        sumRow.getCell(1).font = {bold: true};
-        sumRow.getCell(1).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFEAECEE'}};
+        ws.getRow(excelRow).getCell(1).font = {bold: true};
+        ws.getRow(excelRow).getCell(1).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFEAECEE'}};
         excelRow++;
       }
 
-      // Empty row
-      ws.addRow([]);
-      excelRow++;
+      ws.addRow([]); excelRow++;
 
-      // VP SUM row
-      const vpRowIdx = excelRow;
       const vpSumData = ['VP SUM'];
       for (let ci = 2; ci <= timeSlots.length + 1; ci++) {
         const col = colLetter(ci);
@@ -1455,11 +1527,8 @@ async function generateMatrix() {
       ws.getRow(excelRow).getCell(1).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFEAECEE'}};
       excelRow++;
 
-      // Empty row
-      ws.addRow([]);
-      excelRow++;
+      ws.addRow([]); excelRow++;
 
-      // TOTAL SUM row
       const totalSumData = ['TOTAL SUM'];
       for (let ci = 2; ci <= timeSlots.length + 1; ci++) {
         const col = colLetter(ci);
@@ -1470,12 +1539,9 @@ async function generateMatrix() {
       ws.getRow(excelRow).getCell(1).font = {bold: true, color: {argb: 'FF2C3E50'}};
       ws.getRow(excelRow).getCell(1).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFEAECEE'}};
 
-      // === Color code time slot headers ===
-      // We need to compute actual sums to know colors
+      // Color-code time slot headers
       for (let si = 0; si < timeSlots.length; si++) {
         const ci = si + 2;
-
-        // Compute sums directly
         const partSums = {};
         for (const p of partOrder) {
           partSums[p] = membersByPart[p].reduce((acc, m) => acc + (availability[m.w2m][si] || 0), 0);
@@ -1484,16 +1550,14 @@ async function generateMatrix() {
         const vpSum    = state.config.members.filter(m => m.vp).reduce((acc, m) => acc + (availability[m.w2m][si] || 0), 0);
         const allPartsOk = partOrder.every(p => partSums[p] >= 1);
 
-        let color = 'FFFFFFFF'; // white (no color)
-        if (allPartsOk && totalSum >= 6 && vpSum >= 1) color = 'FF90EE90'; // green
-        else if (allPartsOk && totalSum >= 5)          color = 'FFFFFF99'; // yellow
-        else                                            color = 'FFFFB3B3'; // red/pink
+        let color = 'FFFFFFFF';
+        if (allPartsOk && totalSum >= 6 && vpSum >= 1) color = 'FF90EE90';
+        else if (allPartsOk && totalSum >= 5)          color = 'FFFFFF99';
+        else                                            color = 'FFFFB3B3';
 
-        const cell = ws.getRow(1).getCell(ci);
-        cell.fill  = {type:'pattern', pattern:'solid', fgColor:{argb: color}};
+        ws.getRow(1).getCell(ci).fill = {type:'pattern', pattern:'solid', fgColor:{argb: color}};
       }
 
-      // Column widths
       ws.getColumn(1).width = 14;
       for (let ci = 2; ci <= timeSlots.length + 1; ci++) ws.getColumn(ci).width = 9;
     }
@@ -1599,14 +1663,14 @@ function parseOrders() {
       const isVirtual = day.toLowerCase().includes('virtual') ||
                         String(row[cm.location]||'').toLowerCase().includes('virtual');
 
-      // Find time slot and day key
+      // Find time slot and day key — built dynamically from fundraiserDays config
       let timeSlot = '', dayKey = '';
-      const dayTimeCols = {Mon: cm.timeMon, Tue: cm.timeTue, Wed: cm.timeWed,
-                           Thu: cm.timeThu, Fri: cm.timeFri, Sat: cm.timeSat};
-      for (const [dk, col] of Object.entries(dayTimeCols)) {
-        if (row[col] && String(row[col]).trim()) {
-          timeSlot = String(row[col]).trim();
-          dayKey   = dk;
+      const fundraiserDays = state.config.fundraiserDays || [];
+      for (const fd of fundraiserDays) {
+        const val = row[fd.colIndex];
+        if (val && String(val).trim()) {
+          timeSlot = String(val).trim();
+          dayKey   = fd.key;
           break;
         }
       }
@@ -1647,29 +1711,30 @@ function parseOrders() {
 }
 
 function parseMatrix(buffer) {
-  const wb   = XLSX.read(buffer, {type:'array'});
+  const wb     = XLSX.read(buffer, {type:'array'});
   const result = {}; // dayKey -> memberDisplay -> slotIndex -> 0|1
-  const startH = state.config.matrixStartHour;
-  const endH   = state.config.matrixEndHour;
-  const dayMap = {Monday:'Mon', Tuesday:'Tue', Wednesday:'Wed', Thursday:'Thu', Friday:'Fri', Saturday:'Sat'};
+  const days   = state.config.fundraiserDays || [];
+
+  // Build a map: weekday name -> {dayKey, startHour, endHour}
+  const dayByWeekday = {};
+  for (const d of days) dayByWeekday[d.weekday] = d;
 
   for (const sheetName of wb.SheetNames) {
-    const dayKey = dayMap[sheetName] || dayMap[sheetName.split(' ')[0]];
-    if (!dayKey) continue;
+    // Match sheet name to a configured day (exact match or first-word match)
+    const dayConfig = dayByWeekday[sheetName] || dayByWeekday[sheetName.split(' ')[0]];
+    if (!dayConfig) continue;
 
+    const {key: dayKey, startHour, endHour} = dayConfig;
     const ws   = wb.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
     if (rows.length < 2) continue;
 
-    const headers = rows[0]; // [null/blank, '8-8:30', ...]
+    const headers = rows[0];
     result[dayKey] = {};
 
-    // Number of 30-min slots expected
-    const numSlots = (endH - startH) * 2;
-
-    // Build slot time keys (hour + min as 24h) from column position
+    // Build slot times for this day's specific hours
     const slotTimes = [];
-    for (let h = startH; h < endH; h++) {
+    for (let h = startHour; h < endHour; h++) {
       slotTimes.push({h, m: 0});
       slotTimes.push({h, m: 30});
     }
@@ -1678,11 +1743,9 @@ function parseMatrix(buffer) {
     for (const row of rows.slice(1)) {
       const label = String(row[0] || '').trim();
       if (!label || sumKeywords.some(k => label.includes(k))) continue;
-
       result[dayKey][label] = {};
       for (let ci = 1; ci < headers.length && ci - 1 < slotTimes.length; ci++) {
-        const val = Number(row[ci]) || 0;
-        result[dayKey][label][ci - 1] = val; // slot index
+        result[dayKey][label][ci - 1] = Number(row[ci]) || 0;
       }
     }
   }
@@ -1693,7 +1756,7 @@ function getPerformers(dayKey, timeSlotStr) {
   const performers = {SOP:[], ALT:[], TEN:[], BASS:[]};
   if (!state.matrixData || !state.matrixData[dayKey]) return performers;
 
-  const slotIdx = timeSlotToIndex(timeSlotStr);
+  const slotIdx = timeSlotToIndex(timeSlotStr, dayKey);
   if (slotIdx === -1) return performers;
 
   for (const member of state.config.members) {
@@ -1707,17 +1770,16 @@ function getPerformers(dayKey, timeSlotStr) {
   return performers;
 }
 
-function timeSlotToIndex(slotStr) {
-  // Convert order form time string to matrix slot index
-  // e.g. "4-4:30pm" → index relative to startHour
-  const startH = state.config.matrixStartHour;
-  const endH   = state.config.matrixEndHour;
+function timeSlotToIndex(slotStr, dayKey) {
+  // Get per-day hours from fundraiserDays config
+  const days = state.config.fundraiserDays || [];
+  const dayConfig = days.find(d => d.key === dayKey);
+  const startH = dayConfig ? dayConfig.startHour : 8;
+  const endH   = dayConfig ? dayConfig.endHour   : 21;
 
-  // Try to parse 24h start time
   const h24 = parseTimeSlotTo24h(slotStr);
   if (h24 === null) return -1;
 
-  // Index = (hour - startH) * 2 + (minute / 30)
   const totalSlots = (endH - startH) * 2;
   const idx = (h24.h - startH) * 2 + (h24.m === 30 ? 1 : 0);
   if (idx < 0 || idx >= totalSlots) return -1;
@@ -1881,15 +1943,8 @@ function renderExport(dayKey) {
   if (!isVirtual) {
     slackBlock.style.display = 'block';
     const sortedOrders = [...dayOrders].sort((a,b) => compareTimeSlots(a.timeSlot, b.timeSlot));
-    const slackIntros  = {
-      Mon: '@channel Hi guys tomorrow is the FIRST DAY OF LOVE NOTES WEEK OH YEAHHHH. Ok here\'s the schedule:',
-      Tue: '@channel Hi guys tomorrow is the SECOND DAY OF LOVE NOTES WEEK LETS GOOOOOOOOOO. Ok here is the schedule:',
-      Wed: '@channel Hi guys tomorrow is the THIRD DAY OF LOVE NOTES WEEK LETS GOOOOOOOOOO. Ok here da schedule:',
-      Thu: '@channel Hi guys tomorrow is the FOURTH DAY OF LOVE NOTES WEEK YEAHHHHHHHH OH YEAHHHHHHHH OH YEAHHHHHHH WAHHHHHHHH. Ok here\'s the schedule:',
-      Fri: '@channel Hi guys tomorrow is the FIFTH DAY OF LOVE NOTES WEEK YURRRRRRRRR. Ok schedule:',
-      Sat: '@channel Hi guys tomorrow is the SIXTH DAY OF LOVE NOTES WEEK YUUUUUUUUH. Ok schedule:',
-    };
-    const intro = slackIntros[dayKey] || '@channel Here\'s the schedule:';
+    const dayConfig = (state.config.fundraiserDays || []).find(d => d.key === dayKey);
+    const intro = (dayConfig && dayConfig.slackIntro) ? dayConfig.slackIntro : "@channel Here's the schedule:";
     const outro = dayOrders.length ? "\nThat's the schedule! Let's go deliver some LOVE NOTES 💌" : '';
     const entries = sortedOrders.map(o => buildSlackEntry(o)).join('\n');
     const fullAnn = `${intro}\n${entries}${outro}`;
@@ -2142,13 +2197,12 @@ Contact: ${order.contact}`;
 }
 
 function buildEventDateTime(dayKey, timeSlotStr) {
-  // Map dayKey to a 2026 date
-  const dates = {Mon:'2026-02-09', Tue:'2026-02-10', Wed:'2026-02-11',
-                 Thu:'2026-02-12', Fri:'2026-02-13', Sat:'2026-02-14'};
-  const dateStr = dates[dayKey];
+  // Look up the calendar date from fundraiserDays config
+  const days = state.config.fundraiserDays || [];
+  const dayConfig = days.find(d => d.key === dayKey);
+  const dateStr = dayConfig ? dayConfig.date : null;
   if (!dateStr) return {startDT: null, endDT: null};
 
-  // Parse start time
   const parsed = parseTimeSlotTo24h(timeSlotStr);
   if (!parsed) return {startDT: null, endDT: null};
 
@@ -2156,7 +2210,7 @@ function buildEventDateTime(dayKey, timeSlotStr) {
   const startDT = `${dateStr}T${padded(parsed.h)}:${padded(parsed.m)}:00`;
   const endH = parsed.m === 30 ? parsed.h + 1 : parsed.h;
   const endM = parsed.m === 30 ? 0 : 30;
-  const endDT   = `${dateStr}T${padded(endH)}:${padded(endM)}:00`;
+  const endDT = `${dateStr}T${padded(endH)}:${padded(endM)}:00`;
   return {startDT, endDT};
 }
 
@@ -2376,6 +2430,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadConfig();
   initTabs();
   populateSetupUI();
+  rebuildDayTabs();
 
   // Banner preview — update live as user types
   const bannerInput = document.getElementById('bannerImageUrl');
@@ -2384,13 +2439,24 @@ document.addEventListener('DOMContentLoaded', () => {
     updateBannerPreview();
   }
 
-  // Set default matrix dates
-  document.getElementById('matrixStartDate').value = '2026-02-09';
-  document.getElementById('matrixEndDate').value   = '2026-02-14';
+  // Matrix tab: show fundraiser days summary from config
+  const summaryEl = document.getElementById('matrixDaysSummary');
+  if (summaryEl) {
+    const days = state.config.fundraiserDays || [];
+    if (days.length) {
+      const fmt = h => h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h-12} PM`;
+      const lines = days.map(d =>
+        `<strong>${d.weekday} ${d.date}</strong> — ${fmt(d.startHour)} to ${fmt(d.endHour)}`
+      ).join(' &nbsp;|&nbsp; ');
+      summaryEl.innerHTML = `📅 Generating matrix for: ${lines}`;
+    } else {
+      summaryEl.innerHTML = '⚠️ No fundraiser days configured. Go to Setup → Fundraiser Days.';
+    }
+  }
 
-  // Initial export render
-  const firstDayBtn = document.querySelector('#exportDayTabs .day-tab-btn');
-  if (firstDayBtn) renderExport('Mon');
+  // Initial export render — use first configured day
+  const days = state.config.fundraiserDays || [];
+  if (days.length) renderExport(days[0].key);
 });
 </script>
 </body>
